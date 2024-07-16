@@ -2,59 +2,29 @@
 
 This project leverages OpenAI's gpt-3.5-turbo-0125 model to generate and optimize resumes tailored to job listings, ensuring high compatibility with Applicant Tracking Systems (ATS).
 
-## Project Structure
+## Abstract
 
-```
-resume-gen-ats/
-├── .github/
-│   └── workflows/
-│       └── ci.yml              # GitHub Actions CI/CD pipeline definition
-├── scripts/
-│   ├── data_upload.py          # Uploads cleaned or processed data to MongoDB
-│   ├── data_cleanup.py         # Cleans up input data
-│   ├── data_update.py          # Adds score and truthfulness to output 
-│   ├── fine-tuning.py          # Fine-tunes the GPT model
-│   ├── monitor_fine-tuning.py  # Monitors the fine-tuning process
-│   ├── model-testing.py        # Tests the model
-│   ├── data-extraction/
-│   │   ├── extract_text_from_excel.py  # Extracts text from CSV files
-│   │   └── preprocess_text.py  # Preprocesses extracted text
-│   └── data-processing/
-│       ├── process_resumes.py  # Processes resumes
-│       ├── process_job_listings.py  # Processes job listings
-│       └── generate_ats_feedback.py  # Generates ATS feedback
-├── app/
-│   ├── main.py                 # Main application entry point
-│   ├── utils/
-│   │   ├── openai_utils.py     # Interacts with OpenAI API
-│   │   ├── s3_utils.py         # Interacts with S3
-│   │   └── mongodb_utils.py    # Interacts with MongoDB
-│   └── tasks/
-│       ├── process_resume_task.py  # Processes resumes
-│       └── generate_resume_task.py # Generates and optimizes resumes
-├── data/
-│   ├── input/                  # Stores input files
-│   ├── processed/              # Stores processed data
-│   └── output/                 # Stores output files
-├── tests/
-│   ├── unit/
-│   │   ├── test_data_extraction.py  # Unit tests for data extraction scripts
-│   │   ├── test_data_processing.py  # Unit tests for data processing scripts
-│   │   └── test_model_utils.py  # Unit tests for model utility functions
-│   └── integration/
-│       └── test_end_to_end.py   # End-to-end integration tests
-├── docs/
-│   ├── setup-guide.md          # Guide for setting up the project
-│   ├── usage-guide.md          # Guide for using the project
-│   └── architecture-diagram.drawio # Architecture diagram of the project
-├── requirements.txt            # Python dependencies
-└── README.md                   # Project overview and instructions
-└── .env                        # Project keys and secrets
-```
+In this project, data flows from raw input files (resumes and job postings in CSV format) stored in the S3 bucket resume-gen-ats-raw-data. The data is cleaned and processed using Python scripts such as data_cleanup.py, which filters and preprocesses the text. The cleaned data is then saved back to the S3 bucket resume-gen-ats-processed-data. Subsequently, the script data_upload.py uploads this processed data to two MongoDB collections: Resumes (fields: id, resume_text, job_descriptions, generated_resume, prompt) and Resume_Post_Edit (fields: id, resume_text, job_descriptions, generated_resume, prompt, score, truthfulness). Using OpenAI's GPT-3.5-turbo-0125 model, the script generate_resume_task.py generates and optimizes resumes based on job descriptions. Currently, volunteers use the data_update.py script to manually add fields like "truthfulness" and update scores through a MongoDB interface as we do not have access to a convenient ATS API. The collected feedback and labels are used to fine-tune the model via the fine-tuning.py script for continuous improvement. The entire workflow is automated using a CI/CD pipeline defined in the GitHub Actions workflow ci.yml, ensuring seamless data processing, model training, and deployment.
 
-## Setup Instructions
+## Table of Contents
 
-### Prerequisites
+1. [Project Overview](#project-overview)
+2. [Prerequisites](#prerequisites)
+3. [Installation](#installation)
+4. [Configuration](#configuration)
+5. [Usage](#usage)
+6. [Project Structure](#project-structure)
+7. [Data Flow](#data-flow)
+8. [Contributing](#contributing)
+9. [License](#license)
+
+## Project Overview
+
+This project automates the process of resume optimization for job applications. It uses machine learning to generate resumes tailored to specific job descriptions, with the goal of improving compatibility with Applicant Tracking Systems (ATS).
+
+## Prerequisites
+
+Before you begin, ensure you have met the following requirements:
 
 - Python 3.8 or higher
 - Git
@@ -62,139 +32,110 @@ resume-gen-ats/
 - MongoDB
 - OpenAI API key
 
-### Installation
+## Installation
 
-1. **Clone the repository:**
+1. Clone the repository:
+   ```
+   git clone https://github.com/your-username/resume-gen-ats.git
+   cd resume-gen-ats
+   ```
 
-```bash
-git clone https://github.com/your-username/resume-gen-ats.git
-cd resume-gen-ats
-```
+2. Create and activate a virtual environment:
+   ```
+   python3 -m venv venv
+   source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+   ```
 
-2. **Create a virtual environment and activate it:**
+3. Install the dependencies:
+   ```
+   pip install -r requirements.txt
+   ```
 
-```bash
-python3 -m venv venv
-source venv/bin/activate  # On Windows use `venv\Scripts\activate`
-```
+## Configuration
 
-3. **Install the dependencies:**
+1. Create a `.env` file in the root directory of the project.
 
-```bash
-pip install -r requirements.txt
-```
+2. Add the following environment variables to the `.env` file:
+   ```
+   AWS_ACCESS_KEY_ID=your_aws_access_key_id
+   AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key
+   OPENAI_API_KEY=your_openai_api_key
+   MONGO_URI=surp24.rwhuwqq.mongodb.net
+   MONGO_USERNAME=your_mongodb_username
+   MONGO_PASSWORD=your_mongodb_password
+   MONGO_DB_NAME=SURP24
+   MONGO_COLLECTION_NAME=Resumes
+   MONGO_COLLECTION_EDITED_NAME=Resumes_Post_Edit
+   GITHUB_TOKEN=your_github_token
+   SLACK_WEBHOOK=your_slack_webhook_url
+   ```
 
-4. **Set up the environment variables:**
+   Replace the placeholder values with your actual credentials and configurations.
 
-Create a `.env` file in the root directory of your project and add the following variables:
+## Usage
 
-```plaintext
-AWS_ACCESS_KEY_ID=your_aws_access_key_id
-AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key
-OPENAI_API_KEY=your_openai_api_key
-MONGO_URI=surp24.rwhuwqq.mongodb.net
-MONGO_USERNAME=your_mongodb_username
-MONGO_PASSWORD=your_mongodb_password
-MONGO_DB_NAME=SURP24
-MONGO_COLLECTION_NAME=Resumes
-```
+1. Data Preparation:
+   - Place your raw resume and job posting CSV files in the S3 bucket `resume-gen-ats-raw-data`.
 
-### Usage
+2. Data Cleanup:
+   - Run the data cleanup script:
+     ```
+     python scripts/data_cleanup.py
+     ```
+   - This will process the raw data and save the cleaned data to the S3 bucket `resume-gen-ats-processed-data`.
 
-1. **Run data extraction and processing scripts:**
+3. Data Upload:
+   - Upload the processed data to MongoDB:
+     ```
+     python scripts/data_upload.py
+     ```
 
-```bash
-python scripts/data-extraction/extract_text_from_excel.py
-python scripts/data-processing/process_resumes.py
-python scripts/data-processing/process_job_listings.py
-```
+4. Generate Optimized Resumes:
+   - Run the resume generation script:
+     ```
+     python app/tasks/generate_resume_task.py
+     ```
 
-2. **Upload processed data to MongoDB:**
+5. Manual Review:
+   - Volunteers can use the `data_update.py` script to manually add scores and truthfulness ratings:
+     ```
+     python scripts/data_update.py
+     ```
 
-```bash
-python scripts/data-upload.py
-```
+6. Model Fine-tuning:
+   - Fine-tune the model using the collected feedback:
+     ```
+     python scripts/fine-tuning.py
+     ```
 
-3. **Generate and optimize resumes:**
+7. Monitoring and Testing:
+   - Monitor the fine-tuning process:
+     ```
+     python scripts/monitor_fine-tuning.py
+     ```
+   - Run model tests:
+     ```
+     python scripts/model-testing.py
+     ```
 
-```bash
-python app/tasks/generate_resume_task.py
-```
+8. CI/CD Pipeline:
+   - The project includes a GitHub Actions workflow defined in `.github/workflows/ci.yml` that automates the entire process.
 
-4. **Generate ATS feedback:**
+## Project Structure
 
-```bash
-python scripts/data-processing/generate_ats_feedback.py
-```
+[Include the project structure here as provided in the original document]
 
-** This might be different from the standard procedure. Initially, we are asking to put this output onto a document and manually feed it to the ATS system. 
+## Data Flow
 
-5. **Fine-tune the model:**
-
-```bash
-python scripts/fine-tuning.py
-python scripts/monitor_fine_tuning.py
-```
+1. Raw data (resumes and job postings in CSV format) is stored in the S3 bucket `resume-gen-ats-raw-data`.
+2. Data is cleaned and processed using `data_cleanup.py`.
+3. Cleaned data is saved to the S3 bucket `resume-gen-ats-processed-data`.
+4. Processed data is uploaded to MongoDB collections (`Resumes` and `Resume_Post_Edit`) using `data_upload.py`.
+5. Resumes are generated and optimized using `generate_resume_task.py`.
+6. Volunteers manually add scores and truthfulness ratings using `data_update.py`.
+7. The model is fine-tuned using the collected feedback via `fine-tuning.py`.
 
 ## Contributing
 
-Contributions are welcome! Please read the [contributing guidelines](CONTRIBUTING.md) before submitting a pull request.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-```
-
-### Instructions for Setting Up the `.env` File
-
-1. **Create a `.env` file in the root directory of your project:**
-
-```bash
-touch .env
-```
-
-2. **Add your environment variables to the `.env` file:**
-
-```plaintext
-AWS_ACCESS_KEY_ID=your_aws_access_key_id
-AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key
-OPENAI_API_KEY=your_openai_api_key
-MONGO_URI=surp24.rwhuwqq.mongodb.net 
-MONGO_USERNAME=your_mongodb_username
-MONGO_PASSWORD=your_mongodb_password
-MONGO_DB_NAME=SURP24
-MONGO_COLLECTION_NAME=Resumes
-```
-
-Katie or I should have given you these keys. If you don't have them or forget them, let us know. 
-
-3. **Load the environment variables in your scripts:**
-
-In your Python scripts, use the `python-dotenv` package to load the environment variables from the `.env` file:
-
-```python
-from dotenv import load_dotenv
-import os
-
-# Load environment variables from .env file
-load_dotenv()
-
-# Access the variables (for example)
-aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
-# continue with rest of keys or secrets
-```
-
-4. **Install the `python-dotenv` package if not already installed:**
-
-Add `python-dotenv` to your `requirements.txt`:
-
-```plaintext
-python-dotenv
-```
-
-And install it:
-
-```bash
-pip install python-dotenv
-```
+Contributions to this project are welcome. Please ensure you follow the coding standards and submit pull requests for any new features or bug fixes.
 

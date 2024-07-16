@@ -1,0 +1,7 @@
+pandas
+numpy
+boto3
+pymongo
+openai
+requests
+python-dotenv

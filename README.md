@@ -123,7 +123,7 @@ Before you begin, ensure you have met the following requirements:
 
 ## Project Structure
 
-'''
+```
 resume-gen-ats/
 ├── .github/
 │   └── workflows/
@@ -169,7 +169,7 @@ resume-gen-ats/
 ├── requirements.txt            # Python dependencies
 └── README.md                   # Project overview and instructions
 └── .env                        # Project keys and secrets
-'''
+```
 
 ## Data Flow
 

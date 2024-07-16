@@ -123,7 +123,53 @@ Before you begin, ensure you have met the following requirements:
 
 ## Project Structure
 
-[Include the project structure here as provided in the original document]
+'''
+resume-gen-ats/
+├── .github/
+│   └── workflows/
+│       └── ci.yml              # GitHub Actions CI/CD pipeline definition
+├── scripts/
+│   ├── data_upload.py          # Uploads cleaned or processed data to MongoDB
+│   ├── data_cleanup.py         # Cleans up input data
+│   ├── data_update.py          # Adds score and truthfulness to output 
+│   ├── fine-tuning.py          # Fine-tunes the GPT model
+│   ├── monitor_fine-tuning.py  # Monitors the fine-tuning process
+│   ├── model-testing.py        # Tests the model
+│   ├── data-extraction/
+│   │   ├── extract_text_from_excel.py  # Extracts text from CSV files
+│   │   └── preprocess_text.py  # Preprocesses extracted text
+│   └── data-processing/
+│       ├── process_resumes.py  # Processes resumes
+│       ├── process_job_listings.py  # Processes job listings
+│       └── generate_ats_feedback.py  # Generates ATS feedback
+├── app/
+│   ├── main.py                 # Main application entry point
+│   ├── utils/
+│   │   ├── openai_utils.py     # Interacts with OpenAI API
+│   │   ├── s3_utils.py         # Interacts with S3
+│   │   └── mongodb_utils.py    # Interacts with MongoDB
+│   └── tasks/
+│       ├── process_resume_task.py  # Processes resumes
+│       └── generate_resume_task.py # Generates and optimizes resumes
+├── data/
+│   ├── input/                  # Stores input files
+│   ├── processed/              # Stores processed data
+│   └── output/                 # Stores output files
+├── tests/
+│   ├── unit/
+│   │   ├── test_data_extraction.py  # Unit tests for data extraction scripts
+│   │   ├── test_data_processing.py  # Unit tests for data processing scripts
+│   │   └── test_model_utils.py  # Unit tests for model utility functions
+│   └── integration/
+│       └── test_end_to_end.py   # End-to-end integration tests
+├── docs/
+│   ├── setup-guide.md          # Guide for setting up the project
+│   ├── usage-guide.md          # Guide for using the project
+│   └── architecture-diagram.drawio # Architecture diagram of the project
+├── requirements.txt            # Python dependencies
+└── README.md                   # Project overview and instructions
+└── .env                        # Project keys and secrets
+'''
 
 ## Data Flow
 

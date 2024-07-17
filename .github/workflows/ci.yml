@@ -1,108 +1,53 @@
-name: CI/CD Pipeline
+name: Resume Generation and Optimization Pipeline
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  schedule:
+    - cron: '0 8 * * *'  # This runs at midnight PST (8 AM UTC)
+  workflow_dispatch:  # Allows manual triggering
 
 jobs:
-  build-and-test:
+  run_pipeline:
     runs-on: ubuntu-latest
-
-    env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      MONGO_URI: ${{ secrets.MONGO_URI }}
-      MONGO_USERNAME: ${{ secrets.MONGO_USERNAME }}
-      MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
-      MONGO_DB_NAME: SURP24
-      MONGO_COLLECTION_NAME: Resumes
-      MONGO_COLLECTION_EDITED_NAME: Resume_Post_Edit
-
     steps:
     - uses: actions/checkout@v2
-
+    
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
         python-version: '3.8'
-
+    
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-
-    - name: Run linter
-      run: |
-        pip install flake8
-        flake8 .
-
-    - name: Run unit tests
-      run: python -m unittest discover tests/unit
-
-    - name: Run integration tests
-      run: python -m unittest discover tests/integration
-
-    - name: Download raw data from S3
-      run: |
-        aws s3 sync s3://resume-gen-ats-raw-data ./data/raw
-
-    - name: Clean up data
+    
+    - name: Run data cleanup
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        S3_BUCKET: ${{ secrets.S3_BUCKET }}
       run: python scripts/data_cleanup.py
-
-    - name: Upload processed data to S3
-      run: |
-        aws s3 sync ./data/processed s3://resume-gen-ats-processed-data
-
-    - name: Upload processed data to MongoDB
+    
+    - name: Generate optimized resumes
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      run: python scripts/data_generate_resume.py
+    
+    - name: Upload to MongoDB
+      env:
+        MONGO_URI: ${{ secrets.MONGO_URI }}
+        MONGO_USERNAME: ${{ secrets.MONGO_USERNAME }}
+        MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
+        MONGO_DB_NAME: ${{ secrets.MONGO_DB_NAME }}
+        MONGO_COLLECTION_NAME: ${{ secrets.MONGO_COLLECTION_NAME }}
       run: python scripts/data_upload.py
-
-    - name: Generate and optimize resumes
-      run: python app/tasks/generate_resume_task.py
-
-    - name: Prepare data for fine-tuning
-      run: python scripts/prepare_fine_tuning_data.py
-
+    
     - name: Fine-tune model
-      run: python scripts/fine-tuning.py
-
-    - name: Monitor fine-tuning process
-      run: python scripts/monitor_fine-tuning.py
-
-    - name: Run model tests
-      run: python scripts/model-testing.py
-
-    - name: Build application
-      run: |
-        # Add commands to build your application
-        echo "Building application..."
-
-    - name: Run security scan
-      run: |
-        pip install bandit
-        bandit -r . -f custom
-
-    - name: Deploy to staging
-      if: github.event_name == 'pull_request'
-      run: |
-        # Add commands to deploy to a staging environment
-        echo "Deploying to staging..."
-
-    - name: Deploy to production
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-      run: |
-        # Add commands to deploy to production
-        echo "Deploying to production..."
-
-    # - name: Notify team
-    #   if: always()
-    #   uses: 8398a7/action-slack@v3
-    #   with:
-    #     status: ${{ job.status }}
-    #     text: Deployment ${{ job.status == 'success' && 'succeeded' || 'failed' }}!
-    #     fields: repo,message,commit,author,action,eventName,ref,workflow
-    #   env:
-    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    #     SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        MONGO_URI: ${{ secrets.MONGO_URI }}
+        MONGO_USERNAME: ${{ secrets.MONGO_USERNAME }}
+        MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
+        MONGO_DB_NAME: ${{ secrets.MONGO_DB_NAME }}
+        MONGO_COLLECTION_EDITED_NAME: ${{ secrets.MONGO_COLLECTION_EDITED_NAME }}
+      run: python scripts/fine_tuning.py

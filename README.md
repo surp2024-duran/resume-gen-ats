@@ -1,26 +1,10 @@
 # Resume Generation and Optimization for ATS Systems
 
-This project leverages OpenAI's gpt-3.5-turbo-0125 model to generate and optimize resumes tailored to job listings, ensuring high compatibility with Applicant Tracking Systems (ATS).
+This project leverages OpenAI's gpt-3.5-turbo-0125 model to generate and optimize resumes tailored to job listings, ensuring high compatibility with Applicant Tracking Systems (ATS), with an autonomous pipeline to continue training the model to maximize ATS scoring from EnhanCV
 
 ## Abstract
 
-In this project, data flows from raw input files (resumes and job postings in CSV format) stored in the S3 bucket resume-gen-ats-raw-data. The data is cleaned and processed using Python scripts such as data_cleanup.py, which filters and preprocesses the text. The cleaned data is then saved back to the S3 bucket resume-gen-ats-processed-data. Subsequently, the script data_upload.py uploads this processed data to two MongoDB collections: Resumes (fields: id, resume_text, job_descriptions, generated_resume, prompt) and Resume_Post_Edit (fields: id, resume_text, job_descriptions, generated_resume, prompt, score, truthfulness). Using OpenAI's GPT-3.5-turbo-0125 model, the script generate_resume_task.py generates and optimizes resumes based on job descriptions. Currently, volunteers use the data_update.py script to manually add fields like "truthfulness" and update scores through a MongoDB interface as we do not have access to a convenient ATS API. The collected feedback and labels are used to fine-tune the model via the fine-tuning.py script for continuous improvement. The entire workflow is automated using a CI/CD pipeline defined in the GitHub Actions workflow ci.yml, ensuring seamless data processing, model training, and deployment.
-
-## Table of Contents
-
-1. [Project Overview](#project-overview)
-2. [Prerequisites](#prerequisites)
-3. [Installation](#installation)
-4. [Configuration](#configuration)
-5. [Usage](#usage)
-6. [Project Structure](#project-structure)
-7. [Data Flow](#data-flow)
-8. [Contributing](#contributing)
-9. [License](#license)
-
-## Project Overview
-
-This project automates the process of resume optimization for job applications. It uses machine learning to generate resumes tailored to specific job descriptions, with the goal of improving compatibility with Applicant Tracking Systems (ATS).
+This project develops an autonomous pipeline for generating and optimizing resumes tailored to specific job listings using OpenAI's GPT-3.5-turbo model. The system is designed to improve resume compatibility with Applicant Tracking Systems (ATS) through continuous learning and fine-tuning. By leveraging cloud services (AWS S3 and MongoDB Atlas) and implementing a feedback loop with manual scoring, the pipeline iteratively enhances its ability to produce high-quality, ATS-friendly resumes. The project incorporates a CI/CD workflow for automated model improvement, making it a robust solution for job seekers looking to optimize their application materials for modern recruitment processes.
 
 ## Prerequisites
 
@@ -51,75 +35,89 @@ Before you begin, ensure you have met the following requirements:
    pip install -r requirements.txt
    ```
 
-## Configuration
+## How to Run Manually and Automatically
 
-1. Create a `.env` file in the root directory of the project.
+### Manual Execution
 
-2. Add the following environment variables to the `.env` file:
+To run the pipeline manually, follow these steps:
+
+1. Ensure your `.env` file is properly configured with all necessary credentials.
+
+2. Run the data cleanup script:
    ```
-   AWS_ACCESS_KEY_ID=your_aws_access_key_id
-   AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key
-   OPENAI_API_KEY=your_openai_api_key
-   MONGO_URI=surp24.rwhuwqq.mongodb.net
-   MONGO_USERNAME=your_mongodb_username
-   MONGO_PASSWORD=your_mongodb_password
-   MONGO_DB_NAME=SURP24
-   MONGO_COLLECTION_NAME=Resumes
-   MONGO_COLLECTION_EDITED_NAME=Resumes_Post_Edit
-   GITHUB_TOKEN=your_github_token
-   SLACK_WEBHOOK=your_slack_webhook_url
+   python scripts/data_cleanup.py
+   ```
+   This will read raw data from S3, clean it, and save it to `data/processed`.
+
+3. Generate optimized resumes:
+   ```
+   python scripts/data_generate_resume.py
+   ```
+   This script reads from `data/processed` and outputs to `data/output`.
+
+4. Upload the generated resumes to MongoDB:
+   ```
+   python scripts/data_upload.py
+   ```
+   This uploads the data from `data/output` to the `Resumes` collection in MongoDB.
+
+5. For manual scoring and assessment (to be done by volunteers):
+   ```
+   python scripts/data_update.py
+   ```
+   This allows volunteers to add scores and truthfulness ratings, updating the `Resumes_Post_Edit` collection.
+
+6. To fine-tune the model based on the feedback:
+   ```
+   python scripts/fine_tuning.py
    ```
 
-   Replace the placeholder values with your actual credentials and configurations.
+### Automatic Execution
 
-## Usage
+The project is set up with a GitHub Actions workflow for automatic execution. The workflow is defined in `.github/workflows/ci.yml` and runs daily at midnight PST. Here's how it works:
 
-1. Data Preparation:
-   - Place your raw resume and job posting CSV files in the S3 bucket `resume-gen-ats-raw-data`.
+1. The workflow is triggered automatically at the scheduled time.
 
-2. Data Cleanup:
-   - Run the data cleanup script:
-     ```
-     python scripts/data_cleanup.py
-     ```
-   - This will process the raw data and save the cleaned data to the S3 bucket `resume-gen-ats-processed-data`.
+2. It runs through all the scripts in sequence: `data_cleanup.py`, `data_generate_resume.py`, `data_upload.py`, and `fine_tuning.py`.
 
-3. Data Upload:
-   - Upload the processed data to MongoDB:
-     ```
-     python scripts/data_upload.py
-     ```
+3. The `data_update.py` script is not included in the automatic workflow as it requires manual input from volunteers.
 
-4. Generate Optimized Resumes:
-   - Run the resume generation script:
-     ```
-     python app/tasks/generate_resume_task.py
-     ```
+To set up automatic execution:
 
-5. Manual Review:
-   - Volunteers can use the `data_update.py` script to manually add scores and truthfulness ratings:
-     ```
-     python scripts/data_update.py
-     ```
+1. Ensure your repository is connected to GitHub Actions.
 
-6. Model Fine-tuning:
-   - Fine-tune the model using the collected feedback:
-     ```
-     python scripts/fine-tuning.py
-     ```
+2. Add all necessary secrets (AWS credentials, MongoDB credentials, OpenAI API key, etc.) to your GitHub repository's secrets.
 
-7. Monitoring and Testing:
-   - Monitor the fine-tuning process:
-     ```
-     python scripts/monitor_fine-tuning.py
-     ```
-   - Run model tests:
-     ```
-     python scripts/model-testing.py
-     ```
+3. The workflow will run automatically based on the schedule defined in the `ci.yml` file.
 
-8. CI/CD Pipeline:
-   - The project includes a GitHub Actions workflow defined in `.github/workflows/ci.yml` that automates the entire process.
+To manually trigger the automatic workflow:
+
+1. Go to your GitHub repository.
+2. Click on the "Actions" tab.
+3. Select the workflow "Resume Generation and Optimization Pipeline" (or whatever name you've given it in `ci.yml`).
+4. Click "Run workflow" and select the branch you want to run it on.
+
+This setup allows for both manual execution for testing and development purposes, and automatic execution for continuous improvement of the model and generated resumes.
+
+## Configuration for .env
+
+```
+AWS_ACCESS_KEY_ID=your-aws-key-id
+AWS_SECRET_ACCESS_KEY=your-aws-secret-key
+AWS_REGION=us-east-1
+OPENAI_API_KEY=your-openai-key
+OPENAI_ORG=your-openai-org
+MONGO_URI=surp24.rwhuwqq.mongodb.net
+MONGO_USERNAME=your-mongodb-username
+MONGO_PASSWORD=your-mongodb-password
+MONGO_DB_NAME=SURP24
+MONGO_COLLECTION_NAME=Resumes
+MONGO_COLLECTION_EDITED_NAME=Resumes_Post_Edit
+S3_BUCKET=resume-gen-ats-raw-data
+GITHUB_TOKEN=your-github-token
+SLACK_WEBHOOK=https://hooks.slack.com/services/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
+```
+
 
 ## Project Structure
 
@@ -133,53 +131,145 @@ resume-gen-ats/
 │   ├── data_cleanup.py         # Cleans up input data
 │   ├── data_update.py          # Adds score and truthfulness to output 
 │   ├── fine-tuning.py          # Fine-tunes the GPT model
-│   ├── monitor_fine-tuning.py  # Monitors the fine-tuning process
-│   ├── model-testing.py        # Tests the model
-│   ├── data-extraction/
-│   │   ├── extract_text_from_excel.py  # Extracts text from CSV files
-│   │   └── preprocess_text.py  # Preprocesses extracted text
-│   └── data-processing/
-│       ├── process_resumes.py  # Processes resumes
-│       ├── process_job_listings.py  # Processes job listings
-│       └── generate_ats_feedback.py  # Generates ATS feedback
+│   ├── data_generate_resume.py # Generates resume to job description in 1:1 relationship
+│   
 ├── app/
 │   ├── main.py                 # Main application entry point
-│   ├── utils/
-│   │   ├── openai_utils.py     # Interacts with OpenAI API
-│   │   ├── s3_utils.py         # Interacts with S3
-│   │   └── mongodb_utils.py    # Interacts with MongoDB
-│   └── tasks/
-│       ├── process_resume_task.py  # Processes resumes
-│       └── generate_resume_task.py # Generates and optimizes resumes
+│  
 ├── data/
 │   ├── input/                  # Stores input files
 │   ├── processed/              # Stores processed data
 │   └── output/                 # Stores output files
-├── tests/
-│   ├── unit/
-│   │   ├── test_data_extraction.py  # Unit tests for data extraction scripts
-│   │   ├── test_data_processing.py  # Unit tests for data processing scripts
-│   │   └── test_model_utils.py  # Unit tests for model utility functions
-│   └── integration/
-│       └── test_end_to_end.py   # End-to-end integration tests
-├── docs/
-│   ├── setup-guide.md          # Guide for setting up the project
-│   ├── usage-guide.md          # Guide for using the project
-│   └── architecture-diagram.drawio # Architecture diagram of the project
 ├── requirements.txt            # Python dependencies
 └── README.md                   # Project overview and instructions
 └── .env                        # Project keys and secrets
 ```
 
+## Thoughts Aloud
+
+Data_cleanup.py should still read from S3, but save those raw files into input. you are right though that it should save cleane data to data/processed
+then data_generate_resume.py should be ran, reading from data/procesed and outputting to data/output then data_upload.py reads from data/output to send to the Resumes collection. then data_update.py is done on the volunteer's on time, which will happen randomly throughout each week to manually update score and truthfulness. every document will be manually done, and uploaded to the Resumes_Post_Edit collection 
+
 ## Data Flow
 
-1. Raw data (resumes and job postings in CSV format) is stored in the S3 bucket `resume-gen-ats-raw-data`.
-2. Data is cleaned and processed using `data_cleanup.py`.
-3. Cleaned data is saved to the S3 bucket `resume-gen-ats-processed-data`.
-4. Processed data is uploaded to MongoDB collections (`Resumes` and `Resume_Post_Edit`) using `data_upload.py`.
-5. Resumes are generated and optimized using `generate_resume_task.py`.
-6. Volunteers manually add scores and truthfulness ratings using `data_update.py`.
-7. The model is fine-tuned using the collected feedback via `fine-tuning.py`.
+1. **Raw Data Storage**:
+   - Raw data (resumes and job postings in CSV format) is stored in the S3 bucket `resume-gen-ats-raw-data`.
+   - Raw data is saved to user's local storage at `data/input`
+
+2. **Data Cleaning and Processing**:
+   - Data is cleaned and processed using `data_cleanup.py`.
+   - Cleaned data is saved to user's local storage at `data/processed` directory
+
+3. **Data Generation and Upload**:
+   - Cleaned data from the S3 bucket `resume-gen-ats-processed-data` is manipulated using `data_generate_resume.py`, which generates and adds the "generated_resume" and "prompt" to the `Resumes` collection.
+   - With the two new fields, a new CSV file called `resumes_post_edit.csv` is saved to user's local stoarge at `data/output` directory
+   - The new document, which now includes the "generated_resume" and "prompt" fields, is inserted into the `Resumes_Post_Edit` collection, replacing the old document that lacked these fields using `data_upload.py`.
+   - So essentially, `Resumes` collection should contain `id, resume_text, job_descriptions, generated_resume, prompt` and then `Resumes_Post_Edit` collection should contain the former 5 fields and the additional `score` out of 100 and `truthfulness` boolean which will be added in the next step by volunteer's manual process of using `data_update.py`
+
+4. **Manual Scoring and Assessment**:
+   - Volunteers manually add scores and truthfulness to the `Resumes` collection using `data_update.py` after assessing the resumes through the EnhanCV online interface.
+   - Volunteers will manually look at a document in the `Resumes` collection. If they do not already have a `score` and `truthfulness`, then they will use the `data_update.py` to add those two fields. At the end of the `data_update.py`, it should upload the new document with the two new fields onto `Resumes_Post_Edit` collection. 
+
+5. **Model Fine-Tuning**:
+   - The model is fine-tuned using the collected feedback via `fine_tuning.py`, with the objective of achieving higher ATS scores.
+   - It should take `Resumes_Post_Edit` and see to improve that score, as well as to achieve a `truthfulness` value of `true` which is written by the volunteer manually. 
+
+6. **Continuous Integration and Continuous Deployment (CI/CD)**:
+   - A CI/CD GitHub Actions workflow continuously trains the model based on the latest feedback, ensuring the model improves over time.
+
+7. **Process Repetition**:
+   - New data is added to `resume-gen-ats-raw-data`.
+   - Data is cleaned with `data_cleanup.py` and saved locally.
+   - Resumes are generated with `data_generate_resume.py` and saved locally.
+   - Cleaned data is uploaded to MongoDB with `data_upload.py` to the `Resumes` collection and saved locally.
+   - Volunteers score and assess the resumes, updating documents `Resumes_Post_Edit` derived from `Resumes`
+   - The model is fine-tuned with `fine_tuning.py`.
+   - The CI/CD workflow ensures continuous improvement at midnight every day at 12am PST.
+
+## MongoDB Collections
+
+### Resumes Collection
+
+- **Fields**:
+  - id
+  - resume_text
+  - job_descriptions
+  - generated_resume
+  - prompt
+
+### Resumes_Post_Edit Collection
+
+- **Fields**:
+  - id
+  - resume_text
+  - job_descriptions
+  - generated_resume
+  - prompt
+  - score
+  - truthfulness 
+
+## S3 Buckets 
+
+S3 buckets will really only be used to store large raw datasets. Manipulated data (after we pull it in from S3) should be kept in MongoDB 
+
+- **resume-gen-ats-raw-data**: Stores raw resume and job posting CSV files.
+- **resume-gen-ats-processed-data**: Stores cleaned and processed data files.
+
+## Input CSV Files
+
+`resumes.csv` and `postings.csv` are in the `resume-gen-ats-raw-data` S3 bucket
+
+### resumes.csv
+
+- **Fields**:
+  - Text
+  - Skills
+  - Education
+  - Experience
+  - Additional_Information
+  - Software_Developer
+  - Front_End_Developer
+  - Network_Administrator
+  - Web_Developer
+  - Project_manager
+  - Database_Administrator
+  - Security_Analyst
+  - Systems_Administrator
+  - Python_Developer
+  - Java_Developer
+  - Labels
+
+### postings.csv
+
+- **Fields**:
+  - job_id
+  - company_name
+  - title
+  - description
+  - max_salary
+  - pay_period
+  - location
+  - company_id
+  - views
+  - med_salary
+  - min_salary
+  - formatted_work_type
+  - applies
+  - original_listed_time
+  - remote_allowed
+  - job_posting_url
+  - application_url
+  - application_type
+  - expiry
+  - closed_time
+  - formatted_experience_level
+  - skills_desc
+  - listed_time
+  - posting_domain
+  - sponsored
+  - work_type
+  - currency
+  - compensation_type
 
 ## Contributing
 

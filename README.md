@@ -135,11 +135,13 @@ resume-gen-ats/
 │   
 ├── app/
 │   ├── main.py                 # Main application entry point
-│  
+│   
 ├── data/
 │   ├── input/                  # Stores input files
 │   ├── processed/              # Stores processed data
 │   └── output/                 # Stores output files
+├── util/
+│   ├── reduce_csv_for_test.py  # file for testing
 ├── requirements.txt            # Python dependencies
 └── README.md                   # Project overview and instructions
 └── .env                        # Project keys and secrets

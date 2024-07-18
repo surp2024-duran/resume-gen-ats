@@ -20,7 +20,7 @@ Before you begin, ensure you have met the following requirements:
 
 1. Clone the repository:
    ```
-   git clone https://github.com/your-username/resume-gen-ats.git
+   git clone https://github.com/surp2024-duran/resume-gen-ats.git
    cd resume-gen-ats
    ```
 

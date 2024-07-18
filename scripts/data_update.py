@@ -17,7 +17,7 @@ def print_colored(text, color=Fore.WHITE, style=Style.NORMAL, end='\n'):
 
 def get_mongo_client():
     print_colored("Connecting to MongoDB...", Fore.CYAN)
-    mongo_uri = f"mongodb+srv://{os.getenv('MONGO_USERNAME_TEST')}:{os.getenv('MONGO_PASSWORD_TEST')}@{os.getenv('MONGO_URI')}"
+    mongo_uri = f"mongodb+srv://{os.getenv('MONGO_USERNAME')}:{os.getenv('MONGO_PASSWORD')}@{os.getenv('MONGO_URI')}"
     try:
         client = MongoClient(mongo_uri, tlsCAFile=certifi.where())
         print_colored("Successfully connected to MongoDB.", Fore.GREEN)

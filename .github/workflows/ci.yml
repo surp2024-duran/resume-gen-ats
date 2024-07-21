@@ -69,6 +69,8 @@ jobs:
       with:
         status: ${{ job.status }}
         text: "Pipeline completed successfully! :rocket:"
+        fields: repo,message,commit,author,action,eventName,ref,workflow
+        author_name: GitHub Actions
         webhook_url: ${{ secrets.SLACK_WEBHOOK }}
 
     - name: Notify Slack on failure
@@ -77,4 +79,6 @@ jobs:
       with:
         status: ${{ job.status }}
         text: "Pipeline failed. Please check the logs. :x:"
+        fields: repo,message,commit,author,action,eventName,ref,workflow
+        author_name: GitHub Actions
         webhook_url: ${{ secrets.SLACK_WEBHOOK }}

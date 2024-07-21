@@ -197,19 +197,22 @@ S3_BUCKET_TEST=ci-cd-workflow-test-bucket contains `reduced_postings.csv` and `r
 
 2. **Data Cleaning and Processing**:
    - Data is cleaned and processed using `data_cleanup.py`.
-   - Cleaned data is saved to user's local storage at `data/processed` directory
+   - Cleaned data is saved to user's local storage at `data/processed` directory as `cleaned_job_postings.csv` and `cleaned_resumes.csv`
 
 3. **Data Generation and Upload**:
-   - Cleaned data from the S3 bucket `resume-gen-ats-processed-data` is manipulated using `data_generate_resume.py`, which generates and adds the "generated_resume" and "prompt" to the `Resumes` collection.
+   - Cleaned data from the `data/processed` directory is manipulated using `data_generate_resume.py`, which generates and adds the `generated_resume` and `prompt` to the MongoDB `Resumes` collection.
    - With the two new fields, a new CSV file called `resumes_post_edit.csv` is saved to user's local stoarge at `data/output` directory
-   - The new document, which now includes the "generated_resume" and "prompt" fields, is inserted into the `Resumes_Post_Edit` collection, replacing the old document that lacked these fields using `data_upload.py`.
-   - So essentially, `Resumes` collection should contain `id, resume_text, job_descriptions, generated_resume, prompt` and then `Resumes_Post_Edit` collection should contain the former 5 fields and the additional `
+   - The new documents, which now includes the "generated_resume" and "prompt" fields, is inserted into the `Resumes` collection, replacing the old document that lacked these fields using `data_upload.py`, which is done after all documents are updated with `data_generate_resume.py`
+   - So essentially, `Resumes` collection should contain `id, resume_text, job_descriptions, generated_resume, prompt, generated_resume, and prompt`
+   - The same documents will also be updated to `Resumes_Post_Edit` collection, just as a precaution. 
 
-score` out of 100 and `truthfulness` boolean which will be added in the next step by volunteer's manual process of using `data_update.py`
+Note: The fields `score` is out of 100 and `truthfulness` boolean which will be added in the next step by volunteer's manual process of using `data_update.py`
 
 4. **Manual Scoring and Assessment**:
    - Volunteers manually add scores and truthfulness to the `Resumes` collection using `data_update.py` after assessing the resumes through the EnhanCV online interface.
-   - Volunteers will manually look at a document in the `Resumes` collection. If they do not already have a `score` and `truthfulness`, then they will use the `data_update.py` to add those two fields. At the end of the `data_update.py`, it should upload the new document with the two new fields onto `Resumes_Post_Edit` collection. 
+   - Volunteers will manually look at a document in the `Resumes` collection. If they do not already have a `score` and `truthfulness`, then they will use the `data_update.py` to add those two fields. At the end of the `data_update.py`, it should upload the new document with the two new fields onto `Resumes_Post_Edit` collection, but also the original `Resumes` collection so it will insert 2 new fields into the same document, not replacing it but adding 2 fields. 
+
+   More fields will be added like `claiming` and `didBy` but they aren't very relevant. 
 
 5. **Model Fine-Tuning**:
    - The model is fine-tuned using the collected feedback via `fine_tuning.py`, with the objective of achieving higher ATS scores.
@@ -217,17 +220,22 @@ score` out of 100 and `truthfulness` boolean which will be added in the next ste
 
 6. **Continuous Integration and Continuous Deployment (CI/CD)**:
    - A CI/CD GitHub Actions workflow continuously trains the model based on the latest feedback, ensuring the model improves over time.
+   - This runs every night at 12am PST
 
 7. **Process Repetition**:
    - New data is added to `resume-gen-ats-raw-data`.
    - Data is cleaned with `data_cleanup.py` and saved locally.
    - Resumes are generated with `data_generate_resume.py` and saved locally.
-   - Cleaned data is uploaded to MongoDB with `data_upload.py` to the `Resumes` collection and saved locally.
-   - Volunteers score and assess the resumes, updating documents `Resumes_Post_Edit` derived from `Resumes`
+   - Cleaned data is uploaded to MongoDB with `data_upload.py` to the `Resumes` and `Resumes_Post_Edit` collection and saved locally.
+   - Volunteers score and assess the resumes, updating documents `Resumes_Post_Edit` derived from `Resumes` and also updated the document itself in `Resume`
    - The model is fine-tuned with `fine_tuning.py`.
    - The CI/CD workflow ensures continuous improvement at midnight every day at 12am PST.
 
-## MongoDB Collections
+## Architecture Diagram
+
+[insert diagram here]
+
+## MongoDB 
 
 ### Resumes Collection
 

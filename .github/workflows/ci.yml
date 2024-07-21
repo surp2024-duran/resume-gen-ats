@@ -30,7 +30,7 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
+        aws-region: us-east-1
 
     - name: Run data cleanup
       env:
@@ -69,7 +69,11 @@ jobs:
       with:
         status: ${{ job.status }}
         text: "Pipeline completed successfully! :rocket:"
+        fields: repo,message,commit,author,action,eventName,ref,workflow
+        author_name: GitHub Actions
         webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
 
     - name: Notify Slack on failure
       if: failure()
@@ -77,4 +81,8 @@ jobs:
       with:
         status: ${{ job.status }}
         text: "Pipeline failed. Please check the logs. :x:"
+        fields: repo,message,commit,author,action,eventName,ref,workflow
+        author_name: GitHub Actions
         webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}

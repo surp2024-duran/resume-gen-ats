@@ -72,6 +72,8 @@ jobs:
         fields: repo,message,commit,author,action,eventName,ref,workflow
         author_name: GitHub Actions
         webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
 
     - name: Notify Slack on failure
       if: failure()
@@ -82,3 +84,5 @@ jobs:
         fields: repo,message,commit,author,action,eventName,ref,workflow
         author_name: GitHub Actions
         webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}

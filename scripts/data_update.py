@@ -31,7 +31,10 @@ def find_and_claim_document(collection):
     print_colored("Searching for an unclaimed document...", Fore.CYAN)
     try:
         document = collection.find_one_and_update(
-            {"claiming": {"$exists": False}},
+            {
+                "claiming": {"$exists": False},
+                "didBy": {"$exists": False}
+            },
             {"$set": {"claiming": True}},
             sort=[('_id', 1)],
             return_document=ReturnDocument.AFTER
@@ -59,7 +62,14 @@ def reset_claiming_status(collection, document_id):
 def update_documents(collection, document_id, update_data):
     print_colored("Updating document...", Fore.CYAN)
     try:
-        result = collection.update_one({"_id": ObjectId(document_id)}, {"$set": update_data, "$unset": {"claiming": ""}})
+        result = collection.update_one(
+            {"_id": ObjectId(document_id)},
+            {
+                "$set": update_data,
+                "$unset": {"claiming": ""},
+                "$rename": {"editedBy": "didBy"}
+            }
+        )
         if result.modified_count > 0:
             print_colored(f"Successfully updated document with ID: {document_id}.", Fore.GREEN)
         else:
@@ -93,6 +103,46 @@ def get_user_input(prompt, input_type, valid_range=None):
         else:
             return user_input
 
+def display_paginated_text(text, title):
+    print_colored(f"\n{title}:", Fore.CYAN, Style.BRIGHT)
+    lines = text.split('\n')
+    page_size = 10
+    for i in range(0, len(lines), page_size):
+        print_colored('\n'.join(lines[i:i+page_size]), Fore.WHITE)
+        if i + page_size < len(lines):
+            input("Press Enter to continue...")
+
+def display_document(document):
+    print_colored("\n" + "="*50, Fore.CYAN)
+    print_colored(f"Current Document ID: {document['_id']}", Fore.GREEN, Style.BRIGHT)
+    display_paginated_text(document.get('resume_text', 'N/A'), "Resume Text")
+    display_paginated_text(document.get('job_descriptions', 'N/A'), "Job Description")
+    display_paginated_text(document.get('generated_resume', 'N/A'), "Generated Resume")
+    print_colored("="*50 + "\n", Fore.CYAN)
+
+def edit_document(collection, document):
+    while True:
+        print_colored("\nEdit Menu:", Fore.CYAN)
+        print_colored("1. Edit Score", Fore.WHITE)
+        print_colored("2. Edit Truthfulness", Fore.WHITE)
+        print_colored("3. Save and Exit", Fore.WHITE)
+        choice = get_user_input("Enter your choice (1-3): ", 'int', range(1, 4))
+
+        if choice == 1:
+            score = get_user_input("Enter the new score for this document (0-100): ", 'int', range(101))
+            document['score'] = score
+        elif choice == 2:
+            truthfulness = get_user_input("Is this document truthful? (yes/no): ", 'bool')
+            document['truthfulness'] = truthfulness
+        elif choice == 3:
+            update_data = {
+                "score": document.get('score'),
+                "truthfulness": document.get('truthfulness'),
+                "editedBy": document.get('editedBy')
+            }
+            update_documents(collection, document['_id'], update_data)
+            break
+
 def main():
     client = get_mongo_client()
     if not client:
@@ -120,33 +170,29 @@ def main():
             print_colored("No more documents to update. Exiting script.", Fore.YELLOW)
             break
 
-        document_id = document['_id']
-        score_exists = 'score' in document and document['score'] is not None
-        truthfulness_exists = 'truthfulness' in document and document['truthfulness'] is not None
-
-        if score_exists and truthfulness_exists:
-            print_colored(f"\nDocument {document_id} is already filled:", Fore.YELLOW)
-            print_colored(f"Score: {document['score']}", Fore.CYAN)
-            print_colored(f"Truthfulness: {document['truthfulness']}", Fore.CYAN)
-            reset_claiming_status(resumes_collection, document_id)
-            continue
-
-        print_colored("\n" + "="*50, Fore.CYAN)
-        print_colored(f"Current Document ID: {document_id}", Fore.GREEN, Style.BRIGHT)
-        print_colored(f"Resume Text: {document.get('resume_text', 'N/A')[:100]}...", Fore.WHITE)
-        print_colored(f"Job Description: {document.get('job_descriptions', 'N/A')[:100]}...", Fore.WHITE)
-        print_colored(f"Generated Resume: {document.get('generated_resume', 'N/A')[:100]}...", Fore.WHITE)
-        print_colored("="*50 + "\n", Fore.CYAN)
+        display_document(document)
 
         score = get_user_input("Enter the score for this document (0-100): ", 'int', range(101))
         truthfulness = get_user_input("Is this document truthful? (yes/no): ", 'bool')
 
-        update_data = {
-            "score": score, 
-            "truthfulness": truthfulness, 
-            "editedBy": volunteer_name
-        }
-        update_documents(resumes_collection, document_id, update_data)
+        document['score'] = score
+        document['truthfulness'] = truthfulness
+        document['editedBy'] = volunteer_name
+
+        print_colored("\nSummary of your evaluation:", Fore.CYAN)
+        print_colored(f"Score: {score}", Fore.WHITE)
+        print_colored(f"Truthfulness: {truthfulness}", Fore.WHITE)
+
+        confirm = get_user_input("Do you want to save this evaluation? (yes/no): ", 'bool')
+        if confirm:
+            update_data = {
+                "score": score,
+                "truthfulness": truthfulness,
+                "editedBy": volunteer_name
+            }
+            update_documents(resumes_collection, document['_id'], update_data)
+        else:
+            edit_document(resumes_collection, document)
 
         print_colored("\nDocument processing complete.", Fore.GREEN)
         time.sleep(1)

@@ -11,6 +11,7 @@ tqdm==4.66.1  # For progress bars
 pytest==7.4.0  # For testing
 certifi
 colorama
+pytz # pst time zones
 
 
 #python3 -m venv venv

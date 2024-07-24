@@ -1,12 +1,13 @@
-# scripts/data_update.pyx``
 import os
 import time
 import sys
+from datetime import datetime
 from dotenv import load_dotenv
-from pymongo import MongoClient
+from pymongo import MongoClient, ReturnDocument
 from bson.objectid import ObjectId
 from colorama import init, Fore, Style
 import certifi
+import pytz
 
 init()
 
@@ -30,10 +31,10 @@ def find_and_claim_document(collection):
     print_colored("Searching for an unclaimed document...", Fore.CYAN)
     try:
         document = collection.find_one_and_update(
-            {"$and": [{"claiming": {"$exists": False}}, {"$or": [{"score": {"$exists": False}}, {"truthfulness": {"$exists": False}}]}]},
+            {"claiming": {"$exists": False}},
             {"$set": {"claiming": True}},
             sort=[('_id', 1)],
-            return_document=True
+            return_document=ReturnDocument.AFTER
         )
         if document:
             print_colored(f"Found and claimed document with ID: {document['_id']}", Fore.GREEN)
@@ -55,30 +56,16 @@ def reset_claiming_status(collection, document_id):
     except Exception as e:
         print_colored(f"Error resetting claiming status: {e}", Fore.RED)
 
-def update_documents(collection, query, update):
+def update_documents(collection, document_id, update_data):
     print_colored("Updating document...", Fore.CYAN)
     try:
-        result = collection.update_one(query, update)
+        result = collection.update_one({"_id": ObjectId(document_id)}, {"$set": update_data, "$unset": {"claiming": ""}})
         if result.modified_count > 0:
-            print_colored(f"Successfully updated {result.modified_count} document(s).", Fore.GREEN)
+            print_colored(f"Successfully updated document with ID: {document_id}.", Fore.GREEN)
         else:
             print_colored("No document was updated. The document may already have the same values.", Fore.YELLOW)
     except Exception as e:
         print_colored(f"Error updating document: {e}", Fore.RED)
-
-def insert_document(collection, document):
-    print_colored("Inserting document into post-edit collection...", Fore.CYAN)
-    try:
-        result = collection.insert_one(document)
-        if result.inserted_id:
-            print_colored(f"Document successfully inserted with ID: {result.inserted_id}", Fore.GREEN)
-            return result.inserted_id
-        else:
-            print_colored("Document insertion failed.", Fore.RED)
-            return None
-    except Exception as e:
-        print_colored(f"Error inserting document: {e}", Fore.RED)
-        return None
 
 def get_user_input(prompt, input_type, valid_range=None):
     while True:
@@ -113,11 +100,13 @@ def main():
         return
 
     db = client[os.getenv('MONGO_DB_NAME')]
-    resumes_collection = db[os.getenv('MONGO_COLLECTION_NAME')]
-    post_edit_collection = db[os.getenv('MONGO_COLLECTION_EDITED_NAME')]
+    timezone = pytz.timezone(os.getenv("PYTZ_TIMEZONE"))
+    current_date = datetime.now(timezone).strftime('%B-%d').lower()
+    resumes_collection_name = f"{current_date}-resumes"
+    resumes_collection = db[resumes_collection_name]
 
     print_colored(f"Connected to database: {os.getenv('MONGO_DB_NAME')}", Fore.GREEN)
-    print_colored(f"Using collections: {os.getenv('MONGO_COLLECTION_NAME')} and {os.getenv('MONGO_COLLECTION_EDITED_NAME')}", Fore.GREEN)
+    print_colored(f"Using collection: {resumes_collection_name}", Fore.GREEN)
 
     print_colored("\nWelcome to the Resume Evaluation System!", Fore.CYAN, Style.BRIGHT)
     print_colored("You can type 'quit' at any time to safely exit the script.", Fore.YELLOW)
@@ -153,20 +142,14 @@ def main():
         truthfulness = get_user_input("Is this document truthful? (yes/no): ", 'bool')
 
         update_data = {
-            "$set": {
-                "score": score, 
-                "truthfulness": truthfulness, 
-                "editedBy": volunteer_name
-            }, 
-            "$unset": {"claiming": ""}
+            "score": score, 
+            "truthfulness": truthfulness, 
+            "editedBy": volunteer_name
         }
-        update_documents(resumes_collection, {"_id": ObjectId(document_id)}, update_data)
-
-        document.update({"score": score, "truthfulness": truthfulness, "editedBy": volunteer_name})
-        insert_document(post_edit_collection, document)
+        update_documents(resumes_collection, document_id, update_data)
 
         print_colored("\nDocument processing complete.", Fore.GREEN)
-        time.sleep(1)  # Short pause for readability
+        time.sleep(1)
 
         user_continue = get_user_input("Do you want to process another document? (yes/no): ", 'bool')
         if not user_continue:

@@ -1,6 +1,7 @@
 import os
 import time
 import sys
+import signal
 from datetime import datetime
 from dotenv import load_dotenv
 from pymongo import MongoClient, ReturnDocument
@@ -12,6 +13,22 @@ import pytz
 init()
 
 load_dotenv()
+
+client = None
+current_document_id = None
+resumes_collection = None
+
+def signal_handler(sig, frame):
+    print_colored("\nInterrupt received, cleaning up...", Fore.YELLOW)
+    if current_document_id and resumes_collection:
+        reset_claiming_status(resumes_collection, current_document_id)
+    if client:
+        client.close()
+    print_colored("Cleanup complete. Exiting.", Fore.YELLOW)
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
 
 def print_colored(text, color=Fore.WHITE, style=Style.NORMAL, end='\n'):
     print(f"{style}{color}{text}{Style.RESET_ALL}", end=end)
@@ -28,6 +45,7 @@ def get_mongo_client():
         return None
 
 def find_and_claim_document(collection):
+    global current_document_id
     print_colored("Searching for an unclaimed document...", Fore.CYAN)
     try:
         document = collection.find_one_and_update(
@@ -40,7 +58,8 @@ def find_and_claim_document(collection):
             return_document=ReturnDocument.AFTER
         )
         if document:
-            print_colored(f"Found and claimed document with ID: {document['_id']}", Fore.GREEN)
+            current_document_id = document['_id']
+            print_colored(f"Found and claimed document with ID: {current_document_id}", Fore.GREEN)
         else:
             print_colored("No unclaimed documents found.", Fore.YELLOW)
         return document
@@ -66,8 +85,7 @@ def update_documents(collection, document_id, update_data):
             {"_id": ObjectId(document_id)},
             {
                 "$set": update_data,
-                "$unset": {"claiming": ""},
-                "$rename": {"editedBy": "didBy"}
+                "$unset": {"claiming": ""}
             }
         )
         if result.modified_count > 0:
@@ -82,6 +100,8 @@ def get_user_input(prompt, input_type, valid_range=None):
         user_input = input(prompt).strip().lower()
         if user_input == 'quit':
             print_colored("Exiting the script. Thank you for your contributions!", Fore.YELLOW)
+            if current_document_id and resumes_collection:
+                reset_claiming_status(resumes_collection, current_document_id)
             sys.exit(0)
         
         if input_type == 'int':
@@ -138,12 +158,13 @@ def edit_document(collection, document):
             update_data = {
                 "score": document.get('score'),
                 "truthfulness": document.get('truthfulness'),
-                "editedBy": document.get('editedBy')
+                "didBy": document.get('didBy')
             }
             update_documents(collection, document['_id'], update_data)
             break
 
 def main():
+    global client, resumes_collection
     client = get_mongo_client()
     if not client:
         print_colored("Failed to connect to MongoDB. Exiting script.", Fore.RED)
@@ -161,7 +182,7 @@ def main():
     print_colored("\nWelcome to the Resume Evaluation System!", Fore.CYAN, Style.BRIGHT)
     print_colored("You can type 'quit' at any time to safely exit the script.", Fore.YELLOW)
     
-    volunteer_name = get_user_input("Please enter your name: ", 'str')
+    volunteer_name = get_user_input("Please enter your name: ", 'str').lower()
     print_colored(f"Thank you, {volunteer_name}! Let's begin evaluating resumes.", Fore.GREEN)
 
     while True:
@@ -175,10 +196,6 @@ def main():
         score = get_user_input("Enter the score for this document (0-100): ", 'int', range(101))
         truthfulness = get_user_input("Is this document truthful? (yes/no): ", 'bool')
 
-        document['score'] = score
-        document['truthfulness'] = truthfulness
-        document['editedBy'] = volunteer_name
-
         print_colored("\nSummary of your evaluation:", Fore.CYAN)
         print_colored(f"Score: {score}", Fore.WHITE)
         print_colored(f"Truthfulness: {truthfulness}", Fore.WHITE)
@@ -188,11 +205,11 @@ def main():
             update_data = {
                 "score": score,
                 "truthfulness": truthfulness,
-                "editedBy": volunteer_name
+                "didBy": volunteer_name
             }
-            update_documents(resumes_collection, document['_id'], update_data)
+            update_documents(resumes_collection, current_document_id, update_data)
         else:
-            edit_document(resumes_collection, document)
+            reset_claiming_status(resumes_collection, current_document_id)
 
         print_colored("\nDocument processing complete.", Fore.GREEN)
         time.sleep(1)

@@ -66,20 +66,10 @@ You need to create a `.env` file at the root of this project. In order words, th
    ```
 3. Open and log in to [cloud.mongodb.com](https://cloud.mongodb.com).
 4. Follow the instructions provided by the script. It will ask for your name, the score, and the truthfulness.
-5. Copy the generated resume and paste it onto a text editor such as Google Docs
+5. Copy the generated resume printed from the script and paste it onto a text editor such as Google Docs
 6. Save the document as a PDF and upload it to EnhanCV to receive a score
 7. Type the score into the script line and determine the truthfulness
 8. Continue on
-
-**Note:** You can use MongoDB Compass to view the full collection and documents.
-
-To locate the current document with a specific ID in MongoDB, follow these steps:
-1. Open your MongoDB interface.
-2. Navigate to the desired collection (e.g., Resumes or july-23-resumes).
-3. In the "Documents" tab, locate the query input field where it says "type a query".
-4. Enter the following query, ensuring you replace the example ID with the ID of the document you need to find: { _id: ObjectId('your_document_id_here') }
-5. Click the "Find" button to execute the query and retrieve the document.
-
 
 **Note:** We have a special field called "claiming" that is added to the document while you are editing. This prevents multiple people from working on the same document simultaneously. If the "claiming" field is set to true when you run the script for a selected document, it will skip that document and move on to the next one.
 

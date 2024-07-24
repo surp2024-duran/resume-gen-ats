@@ -7,6 +7,8 @@ from pymongo import MongoClient
 from colorama import init, Fore, Style
 import certifi
 
+# todo: add django site for live dashbaord for stiatic viewing 
+
 init()
 
 load_dotenv()

@@ -116,7 +116,7 @@ def display_document(document):
     print_colored("\n" + "="*50, Fore.CYAN)
     print_colored(f"Current Document ID: {document['_id']}", Fore.GREEN, Style.BRIGHT)
     display_paginated_text(document.get('resume_text', 'N/A'), "Resume Text")
-    display_paginated_text(document.get('job_descriptions', 'N/A'), "Job Description")
+    display_paginated_text(document.get('job_description', 'N/A'), "Job Description")
     display_paginated_text(document.get('generated_resume', 'N/A'), "Generated Resume")
     print_colored("="*50 + "\n", Fore.CYAN)
 

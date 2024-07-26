@@ -32,7 +32,7 @@ jobs:
         AWS_REGION: ${{ secrets.AWS_REGION }}
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         OPENAI_ORG: ${{ secrets.OPENAI_ORG }}
-        MONGO_URI: ${{ secrets.MONGO_URI }}
+        MONGO_URI: ${{ secrets.MONGO_FULL_URI }}
         MONGO_USERNAME: ${{ secrets.MONGO_USERNAME }}
         MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
         MONGO_DB_NAME: ${{ secrets.MONGO_DB_NAME }}
@@ -51,6 +51,5 @@ jobs:
           Fine-tuning process ${{ job.status == 'success' && 'completed successfully! :rocket:' || 'failed. Please check the logs. :x:' }}
         fields: repo,message,commit,author,action,eventName,ref,workflow
         author_name: GitHub Actions
-        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
       env:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}

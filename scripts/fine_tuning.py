@@ -60,6 +60,10 @@ def fine_tune_and_store():
     prev_collection_name = prev_day.strftime('%B-%d-resumes').lower()
     today_collection_name = today.strftime('%B-%d-resumes').lower()
     
+    if today_collection_name in mongo_util.db.list_collection_names():
+        print(f"Collection '{today_collection_name}' already exists. Stopping script execution.")
+        return
+
     prev_collection = mongo_util.db[prev_collection_name]
     today_collection = mongo_util.get_or_create_collection(today_collection_name)
 

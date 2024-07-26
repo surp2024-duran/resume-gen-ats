@@ -1,14 +1,14 @@
 # scripts/fine_tuning.py
 
 import os
-import sys
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from openai import OpenAI
-from tqdm import tqdm
-from dotenv import load_dotenv
-from util.mongo_util import MongoUtil
+import json
 from datetime import datetime, timedelta
+from util.mongo_util import MongoUtil
+from tqdm import tqdm
+from openai import OpenAI
 
+# Load environment variables
+from dotenv import load_dotenv
 load_dotenv()
 
 client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
@@ -51,6 +51,7 @@ def generate_optimized_resume(resume_text, job_description):
         return None, None
 
 def fine_tune_and_store():
+    result = {}
     print("Starting fine-tuning and storing process...")
     mongo_util = MongoUtil()
     
@@ -62,6 +63,10 @@ def fine_tune_and_store():
     
     if today_collection_name in mongo_util.db.list_collection_names():
         print(f"Collection '{today_collection_name}' already exists. Stopping script execution.")
+        result['status'] = 'stopped'
+        result['reason'] = f"Collection '{today_collection_name}' already exists."
+        with open('/tmp/fine_tuning_result.json', 'w') as f:
+            json.dump(result, f)
         return
 
     prev_collection = mongo_util.db[prev_collection_name]
@@ -71,6 +76,9 @@ def fine_tune_and_store():
     documents = mongo_util.fetch_documents(prev_collection)
     if not documents:
         print(f"No documents found in the previous day's collection.")
+        result['status'] = 'no_documents'
+        with open('/tmp/fine_tuning_result.json', 'w') as f:
+            json.dump(result, f)
         return
 
     print(f"Processing {len(documents)} documents...")
@@ -95,6 +103,12 @@ def fine_tune_and_store():
     print(f"Completed fine-tuning and storing in the collection '{today_collection_name}'.")
     mongo_util.close_connection()
     print("Closed MongoDB connection. Process complete.")
+
+    # Store the result in a temporary file for GitHub Actions to read
+    result['status'] = 'completed'
+    result['collection'] = today_collection_name
+    with open('/tmp/fine_tuning_result.json', 'w') as f:
+        json.dump(result, f)
 
 if __name__ == "__main__":
     print("Starting fine_tuning.py script...")

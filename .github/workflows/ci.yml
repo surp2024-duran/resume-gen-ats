@@ -43,6 +43,11 @@ jobs:
         PYTZ_TIMEZONE: ${{ secrets.PYTZ_TIMEZONE }}
       run: python scripts/fine_tuning.py
 
+    - name: Read fine-tuning result
+      id: result
+      run: cat /tmp/fine_tuning_result.json
+      continue-on-error: true
+
     - name: Notify Slack on completion
       if: always()
       uses: 8398a7/action-slack@v3
@@ -50,6 +55,7 @@ jobs:
         status: ${{ job.status }}
         text: |
           Fine-tuning process ${{ job.status == 'success' && 'completed successfully! :rocket:' || 'failed. Please check the logs. :x:' }}
+          Result: ${{ steps.result.outputs.result }}
         fields: repo,message,commit,author,action,eventName,ref,workflow
         author_name: GitHub Actions
       env:

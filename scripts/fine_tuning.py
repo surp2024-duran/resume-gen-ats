@@ -1,14 +1,14 @@
 # scripts/fine_tuning.py
 
 import os
-import json
-from datetime import datetime, timedelta
-from util.mongo_util import MongoUtil
-from tqdm import tqdm
+import sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from openai import OpenAI
-
-# Load environment variables
+from tqdm import tqdm
 from dotenv import load_dotenv
+from util.mongo_util import MongoUtil
+from datetime import datetime, timedelta
+
 load_dotenv()
 
 client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))

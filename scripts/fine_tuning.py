@@ -8,6 +8,7 @@ from tqdm import tqdm
 from dotenv import load_dotenv
 from util.mongo_util import MongoUtil
 from datetime import datetime, timedelta
+import json
 
 load_dotenv()
 

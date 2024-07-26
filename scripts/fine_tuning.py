@@ -94,7 +94,8 @@ def fine_tune_and_store():
                 "job_description": job_description,
                 "generated_resume": generated_resume,
                 "prompt": prompt,
-                "original_id": doc['_id']
+                "original_id": doc['_id'],
+                "created_at": datetime.now(mongo_util.pst)  
             }
             mongo_util.insert_document(today_collection, new_doc)
             print(f"Stored new document in '{today_collection_name}' with original ID: {doc['_id']}")
@@ -105,7 +106,6 @@ def fine_tune_and_store():
     mongo_util.close_connection()
     print("Closed MongoDB connection. Process complete.")
 
-    # Store the result in a temporary file for GitHub Actions to read
     result['status'] = 'completed'
     result['collection'] = today_collection_name
     with open('/tmp/fine_tuning_result.json', 'w') as f:

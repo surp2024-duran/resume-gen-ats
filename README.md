@@ -8,9 +8,6 @@ This project leverages OpenAI's gpt-3.5-turbo-0125 model to generate and optimiz
 2. [Prerequisites](#prerequisites)
 3. [Installation and Local Development](#installation)
 4. [For Volunteers](#for-volunteers)
-5. [How to Run Manually and Automatically](#how-to-run-manually-and-automatically)
-   - [Manual Execution](#manual-execution)
-   - [Automatic Execution](#automatic-execution)
 6. [Configuration for .env](#configuration-for-env)
 7. [Project Structure](#project-structure)
 8. [Thoughts Aloud](#thoughts-aloud)
@@ -83,71 +80,6 @@ To locate the current document with a specific ID in MongoDB, follow these steps
 
 **Note:** We have a special field called "claiming" that is added to the document while you are editing. This prevents multiple people from working on the same document simultaneously. If the "claiming" field is set to true when you run the script for a selected document, it will skip that document and move on to the next one.
 
-## How to Run Manually and Automatically
-
-### Manual Execution
-
-To run the pipeline manually, follow these steps:
-
-1. Ensure your `.env` file is properly configured with all necessary credentials.
-
-2. Run the data cleanup script:
-   ```
-   python scripts/data_cleanup.py
-   ```
-   This will read raw data from S3, clean it, and save it to `data/processed`.
-
-
-3. Upload the cleaned data to MongoDB:
-   ```
-   python scripts/data_upload.py
-   ```
-   This uploads the data from `data/output` to the `Resumes` collection in MongoDB.
-
-4. Generate optimized resumes:
-   ```
-   python scripts/data_generate_resume.py
-   ```
-   This script reads from `data/processed` and outputs to `data/output`.
-
-5. For manual scoring and assessment (to be done by volunteers):
-   ```
-   python scripts/data_update.py
-   ```
-   This allows volunteers to add scores and truthfulness ratings, updating the "latest" collection of the day.
-
-6. To fine-tune the model based on the feedback:
-   ```
-   python scripts/fine_tuning.py
-   ```
-   This script generates "better" resumes and sends it to MongoDB every night.
-
-### Automatic Execution
-
-The project is set up with a GitHub Actions workflow for automatic execution. The workflow is defined in `.github/workflows/ci.yml` and runs daily at midnight PST. Here's how it works:
-
-1. The workflow is triggered automatically at the scheduled time.
-
-2. It runs through all the scripts in sequence: `data_cleanup.py`, `data_upload.py`, `data_generate_resume.py`, and `fine_tuning.py`.
-
-3. The `data_update.py` script is not included in the automatic workflow as it requires manual input from volunteers.
-
-To set up automatic execution:
-
-1. Ensure your repository is connected to GitHub Actions.
-
-2. Add all necessary secrets (AWS credentials, MongoDB credentials, OpenAI API key, etc.) to your GitHub repository's secrets.
-
-3. The workflow will run automatically based on the schedule defined in the `ci.yml` file.
-
-To manually trigger the automatic workflow:
-
-1. Go to your GitHub repository.
-2. Click on the "Actions" tab.
-3. Select the workflow "Resume Generation and Optimization Pipeline" (or whatever name you've given it in `ci.yml`).
-4. Click "Run workflow" and select the branch you want to run it on.
-
-This setup allows for both manual execution for testing and development purposes, and automatic execution for continuous improvement of the model and generated resumes.
 
 ## Configuration for .env
 

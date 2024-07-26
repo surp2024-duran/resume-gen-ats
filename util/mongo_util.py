@@ -9,20 +9,11 @@ import pytz
 load_dotenv()
 
 class MongoUtil:
-    def __init__(self):
-        
+    def __init__(self):   
         self.mongo_uri = f"mongodb+srv://{os.getenv('MONGO_USERNAME')}:{os.getenv('MONGO_PASSWORD')}@{os.getenv('MONGO_URI')}"
-        
-        
         print(f"Constructed Mongo URI: {self.mongo_uri}")
-        
-        
         self.client = MongoClient(self.mongo_uri, tlsCAFile=certifi.where())
-        
-        
         self.db = self.client[os.getenv('MONGO_DB_NAME')]
-        
-        
         self.pst = pytz.timezone(os.getenv('PYTZ_TIMEZONE').strip("'"))
 
     def get_previous_day_collection(self):

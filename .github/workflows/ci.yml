@@ -33,15 +33,14 @@ jobs:
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         OPENAI_ORG: ${{ secrets.OPENAI_ORG }}
         MONGO_URI: ${{ secrets.MONGO_URI }}
-        MONGO_FULL_URI: ${{ secrets.MONGO_FULL_URI }}
         MONGO_USERNAME: ${{ secrets.MONGO_USERNAME }}
         MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
         MONGO_DB_NAME: ${{ secrets.MONGO_DB_NAME }}
         MONGO_COLLECTION_NAME: ${{ secrets.MONGO_COLLECTION_NAME }}
         MONGO_COLLECTION_EDITED_NAME: ${{ secrets.MONGO_COLLECTION_EDITED_NAME }}
         S3_BUCKET: ${{ secrets.S3_BUCKET }}
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         PYTZ_TIMEZONE: ${{ secrets.PYTZ_TIMEZONE }}
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
       run: python scripts/fine_tuning.py
 
     - name: Notify Slack on completion
@@ -54,4 +53,4 @@ jobs:
         fields: repo,message,commit,author,action,eventName,ref,workflow
         author_name: GitHub Actions
       env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

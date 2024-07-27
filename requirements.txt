@@ -12,6 +12,7 @@ pytest==7.4.0  # For testing
 certifi
 colorama
 pytz # pst time zones
+tenacity
 
 
 #python3 -m venv venv

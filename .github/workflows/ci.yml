@@ -2,8 +2,8 @@ name: Daily Resume Fine-Tuning
 
 on:
   schedule:
-    - cron: '0 8 * * *'  # Runs at 00:00 PST (08:00 UTC)
-  workflow_dispatch:  # Allows manual triggering
+    - cron: '0 0 * * 1-5'  # Runs at 00:00 UTC on Monday through Friday
+  workflow_dispatch:  
 
 env:
   PYTHON_VERSION: '3.8'

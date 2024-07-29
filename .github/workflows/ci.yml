@@ -2,9 +2,9 @@ name: Daily Resume Fine-Tuning
 
 on:
   schedule:
-    # Runs at 23:59 (11:59 PM) local time on Monday through Friday
-    - cron: '59 23 * * 1-5'
+    - cron: '0 0 * * *'
   workflow_dispatch:
+
 
 env:
   PYTHON_VERSION: '3.8'

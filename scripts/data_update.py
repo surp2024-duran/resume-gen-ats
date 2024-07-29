@@ -193,12 +193,17 @@ def main():
 
         display_document(document)
 
+        print_colored("You can get the score by accessing the URL and uploading the content of the generated resume onto it.", Fore.YELLOW)
+        print_colored("To do this, copy and paste the resume into a document editor like Google Docs, save it as a PDF, and then upload it to EnhanCV.", Fore.YELLOW)
+        print_colored("URL: https://enhancv.com/resources/resume-checker/", Fore.BLUE)
         score = get_user_input("Enter the score for this document (0-100): ", 'int', range(101))
+        
         truthfulness = get_user_input("Is this document truthful? (yes/no): ", 'bool')
 
         print_colored("\nSummary of your evaluation:", Fore.CYAN)
         print_colored(f"Score: {score}", Fore.WHITE)
         print_colored(f"Truthfulness: {truthfulness}", Fore.WHITE)
+
 
         confirm = get_user_input("Do you want to save this evaluation? (yes/no): ", 'bool')
         if confirm:

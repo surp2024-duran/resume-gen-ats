@@ -13,6 +13,10 @@ certifi
 colorama
 pytz # pst time zones
 tenacity
+Django==3.2.12
+djongo==1.3.6
+
+
 
 
 #python3 -m venv venv

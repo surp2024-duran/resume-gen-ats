@@ -32,37 +32,44 @@ client = OpenAI(api_key=api_key)
     retry=retry_if_exception_type((APIConnectionError, APIError, RateLimitError))
 )
 def generate_optimized_resume(resume_text, job_description):
-    print(f"Generating optimized resume for job description: {job_description[:100]}...")
-    
     prompt = (
-        "You are an expert AI assistant specializing in resume optimization for high ATS scores. "
-        "Given the following resume and job description, generate a highly tailored and ATS-friendly resume. "
-        "Focus on the following key aspects:\n"
-        "1. Clear, concise structure with sections: 'Education', 'Work Experience', 'Skills', and 'Certifications'.\n"
-        "2. Prioritize and prominently display the education section.\n"
-        "3. Use bullet points for clarity and include specific dates where applicable.\n"
-        "4. Incorporate relevant keywords from the job description naturally throughout the resume.\n"
-        "5. Quantify achievements and responsibilities where possible.\n"
-        "6. Ensure all information is truthful and accurately represents the original resume.\n"
-        "7. Format the output in a clean, easy-to-read structure.\n\n"
-        f"Original Resume:\n{resume_text}\n\n"
-        f"Job Description:\n{job_description}\n\n"
-        "Optimized Resume:"
+        "You are an AI resume optimizer. Your task is to create a highly optimized, ATS-friendly resume in LaTeX format based on the given original resume and job description. "
+        "Follow these strict guidelines:\n\n"
+        "1. Output ONLY the LaTeX code for the resume. Do not include any explanations, comments, or additional text.\n"
+        "2. Use the following LaTeX structure:\n"
+        "   \\documentclass[11pt,a4paper]{article}\n"
+        "   \\usepackage[margin=1in]{geometry}\n"
+        "   \\usepackage{titlesec}\n"
+        "   \\usepackage{enumitem}\n"
+        "   \\begin{document}\n"
+        "   ... (resume content) ...\n"
+        "   \\end{document}\n"
+        "3. Include these sections in order: Education, Work Experience, Skills, and Certifications (if applicable).\n"
+        "4. Use \\section{} for main headings and \\subsection{} for subheadings.\n"
+        "5. Use itemize environments for bullet points.\n"
+        "6. Incorporate relevant keywords from the job description naturally throughout the resume.\n"
+        "7. Quantify achievements and responsibilities where possible.\n"
+        "8. Ensure all information is truthful and accurately represents the original resume.\n"
+        "9. Optimize the content for high ATS scores while maintaining readability.\n"
+        "10. Do not include any personal contact information.\n\n"
+        "Original Resume:\n"
+        f"{resume_text}\n\n"
+        "Job Description:\n"
+        f"{job_description}\n\n"
+        "Generate the LaTeX resume now, starting with \\documentclass and ending with \\end{document}. Include ONLY the LaTeX code."
     )
     
     try:
-        print("Sending request to OpenAI API...")
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "You are a professional resume optimizer."},
+                {"role": "system", "content": "You are a LaTeX resume generator. Output only LaTeX code."},
                 {"role": "user", "content": prompt}
             ],
             max_tokens=1500,
             temperature=0.7
         )
         generated_resume = response.choices[0].message.content.strip()
-        print(f"Successfully generated optimized resume. Length: {len(generated_resume)} characters.")
         return generated_resume, prompt
     except (APIConnectionError, APIError, RateLimitError) as e:
         print(f"An error occurred while generating the optimized resume: {e}")

@@ -2,7 +2,7 @@ import os
 import time
 import sys
 import signal
-from datetime import datetime
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from pymongo import MongoClient, ReturnDocument
 from bson.objectid import ObjectId
@@ -163,6 +163,29 @@ def edit_document(collection, document):
             update_documents(collection, document['_id'], update_data)
             break
 
+def get_available_collections(db):
+    return [coll for coll in db.list_collection_names() if coll.endswith('-resumes')]
+
+def get_collection_name(db):
+    available_collections = get_available_collections(db)
+    
+    # Get yesterday's date for the suggested collection
+    timezone = pytz.timezone(os.getenv("PYTZ_TIMEZONE"))
+    yesterday = (datetime.now(timezone) - timedelta(days=1)).strftime('%B-%d').lower()
+    suggested_collection = f"{yesterday}-resumes"
+    
+    print_colored(f"\nSuggested collection for today's labeling: {suggested_collection}", Fore.YELLOW)
+    print_colored("Available collections:", Fore.CYAN)
+    for coll in available_collections:
+        print_colored(f"- {coll}", Fore.WHITE)
+    
+    while True:
+        collection_name = get_user_input("Enter the collection name (in format 'month-dd-resumes', e.g. 'august-01-resumes'): ", 'str')
+        if collection_name in available_collections:
+            return collection_name
+        else:
+            print_colored(f"Error: '{collection_name}' is not a valid collection name. Please try again.", Fore.RED)
+
 def main():
     global client, resumes_collection
     client = get_mongo_client()
@@ -171,12 +194,12 @@ def main():
         return
 
     db = client[os.getenv('MONGO_DB_NAME')]
-    timezone = pytz.timezone(os.getenv("PYTZ_TIMEZONE"))
-    current_date = datetime.now(timezone).strftime('%B-%d').lower()
-    resumes_collection_name = f"{current_date}-resumes"
-    resumes_collection = db[resumes_collection_name]
-
+    
     print_colored(f"Connected to database: {os.getenv('MONGO_DB_NAME')}", Fore.GREEN)
+    
+    resumes_collection_name = get_collection_name(db)
+    resumes_collection = db[resumes_collection_name]
+    
     print_colored(f"Using collection: {resumes_collection_name}", Fore.GREEN)
 
     print_colored("\nWelcome to the Resume Evaluation System!", Fore.CYAN, Style.BRIGHT)
@@ -184,6 +207,7 @@ def main():
     
     volunteer_name = get_user_input("Please enter your name: ", 'str').lower()
     print_colored(f"Thank you, {volunteer_name}! Let's begin evaluating resumes.", Fore.GREEN)
+
 
     while True:
         document = find_and_claim_document(resumes_collection)

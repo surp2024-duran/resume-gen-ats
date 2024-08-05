@@ -14,7 +14,7 @@ const GeneralDashboard = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [documentCount, setDocumentCount] = useState(0);
+//   const [documentCount, setDocumentCount] = useState(0);
   const [collectionCount, setCollectionCount] = useState(0);
   const [percentage, setPercentage] = useState(0);
 

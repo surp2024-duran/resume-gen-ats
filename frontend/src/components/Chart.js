@@ -40,7 +40,7 @@ const Chart = ({ collectionName }) => {
     const stdDev = scores.length ? Math.sqrt(scores.reduce((sq, n) => sq + Math.pow(n - avgScore, 2), 0) / scores.length) : 'N/A';
     const zScores = scores.length ? scores.map(score => (score - avgScore) / stdDev) : [];
 
-    const labelers = documents.filter(doc => doc.didBy).map(doc => doc.didBy);
+    // const labelers = documents.filter(doc => doc.didBy).map(doc => doc.didBy);
     const labelerScores = {};
     labeledDocs.forEach(doc => {
       if (doc.didBy && doc.score !== undefined) {

@@ -8,8 +8,6 @@ import 'uikit/dist/js/uikit.min.js';
 
 ChartJS.register(...registerables);
 
-const API_URL = process.env.REACT_APP_API_URL
-
 const GeneralDashboard = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,14 +25,14 @@ const GeneralDashboard = () => {
   useEffect(() => {
     const fetchDataFromAPI = async () => {
       try {
-        const response = await axios.get(`${API_URL}/data`);
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/data`);
         const collections = response.data.collections.filter((collection) => collection !== 'Resumes');
         setCollectionCount(collections.length);
 
         let totalDocs = 0;
         const allDocuments = await Promise.all(
           collections.map(async (collection, index) => {
-            const res = await axios.get(`${API_URL}/data/${collection}`);
+            const res = await axios.get(`${process.env.REACT_APP_API_URL}/data/${collection}`);
             totalDocs += res.data.length;
             setDocumentCount(totalDocs);
             setPercentage(Math.floor(((index + 1) / collections.length) * 100));

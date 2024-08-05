@@ -1,4 +1,4 @@
-// frontend/src/compnents/GeneralDashboard.js
+// frontend/src/components/GeneralDashboard.js
 import React, { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
 import { Line, Bar, Pie, Scatter } from 'react-chartjs-2';
@@ -203,6 +203,7 @@ const GeneralDashboard = () => {
           <div className="uk-card uk-card-default uk-card-body">
             <h3 className="uk-card-title">Total Documents</h3>
             <p className="uk-text-large">{stats.totalCount}</p>
+            <p className="uk-text-large">Document Count: {documentCount}</p> {/* Use documentCount here */}
           </div>
         </div>
         <div>

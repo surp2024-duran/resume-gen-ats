@@ -76,5 +76,5 @@ Desktop.ini
 *.pem
 
 # Specific to this project
-data/input/
-data/output/
+backend/data/input/
+backend/data/output/

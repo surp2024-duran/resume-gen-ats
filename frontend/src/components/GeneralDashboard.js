@@ -8,7 +8,7 @@ import 'uikit/dist/js/uikit.min.js';
 
 ChartJS.register(...registerables);
 
-const API_URL = 'http://localhost:5000';
+const API_URL = process.env.REACT_APP_API_URL
 
 const GeneralDashboard = () => {
   const [data, setData] = useState([]);

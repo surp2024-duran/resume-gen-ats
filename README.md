@@ -2,23 +2,6 @@
 
 This project leverages OpenAI's gpt-3.5-turbo-0125 model to generate and optimize resumes tailored to job listings, ensuring high compatibility with Applicant Tracking Systems (ATS), with an autonomous pipeline to continue training the model to maximize ATS scoring from EnhanCV.
 
-## Table of Contents
-
-1. [Abstract](#abstract)
-2. [Prerequisites](#prerequisites)
-3. [Installation and Local Development](#installation)
-4. [For Volunteers](#for-volunteers)
-6. [Configuration for .env](#configuration-for-env)
-7. [Project Structure](#project-structure)
-8. [Thoughts Aloud](#thoughts-aloud)
-9. [Data Flow](#data-flow)
-10. [MongoDB Collections](#mongodb-collections)
-    - [Resumes Collection](#resumes-collection)
-    - [Resumes_Post_Edit Collection](#resumes_post_edit-collection)
-11. [S3 Buckets](#s3-buckets)
-12. [Input CSV Files](#input-csv-files)
-13. [Contributing](#contributing)
-
 ## Abstract
 
 This project develops an autonomous pipeline for generating and optimizing resumes tailored to specific job listings using OpenAI's GPT-3.5-turbo model. The system is designed to improve resume compatibility with Applicant Tracking Systems (ATS) through continuous learning and fine-tuning. By leveraging cloud services (AWS S3 and MongoDB Atlas) and implementing a feedback loop with manual scoring, the pipeline iteratively enhances its ability to produce high-quality, ATS-friendly resumes. The project incorporates a CI/CD workflow for automated model improvement, making it a robust solution for job seekers looking to optimize their application materials for modern recruitment processes.
@@ -33,7 +16,7 @@ Before you begin, ensure you have met the following requirements:
 - MongoDB
 - OpenAI API key
 
-## Installation and Local Development (do this everytime you develop)
+## Installation and Local Development For the Backend
 
 1. Clone the repository if you haven't already:
    ```
@@ -41,8 +24,9 @@ Before you begin, ensure you have met the following requirements:
    cd resume-gen-ats
    ```
 
-2. Create and activate a virtual environment:
+2. Go to /backend and create and activate a virtual environment:
    ```
+   cd backend
    python3 -m venv venv
    source venv/bin/activate  # On Windows use `venv\Scripts\activate`
    ```
@@ -51,35 +35,6 @@ Before you begin, ensure you have met the following requirements:
    ```
    pip install -r requirements.txt
    ```
-
-## For Volunteers
-1. **Setup your .env file** (see the Configuration for .env section below).
-
-You need to create a `.env` file at the root of this project. In order words, the `.env` file you create should be at the same directory "level" as the `README.md` or `requirements.txt`
-
-2. Run the script:
-   ```bash
-   python scripts/data_update.py
-   ```
-3. Open and log in to [cloud.mongodb.com](https://cloud.mongodb.com).
-4. Follow the instructions provided by the script. It will ask for your name, the score, and the truthfulness.
-5. Copy the generated resume and paste it onto a text editor such as Google Docs
-6. Save the document as a PDF and upload it to EnhanCV to receive a score
-7. Type the score into the script line and determine the truthfulness
-8. Continue on
-
-**Note:** You can use MongoDB Compass to view the full collection and documents.
-
-To locate the current document with a specific ID in MongoDB, follow these steps:
-1. Open your MongoDB interface.
-2. Navigate to the desired collection (e.g., Resumes or july-23-resumes).
-3. In the "Documents" tab, locate the query input field where it says "type a query".
-4. Enter the following query, ensuring you replace the example ID with the ID of the document you need to find: { _id: ObjectId('your_document_id_here') }
-5. Click the "Find" button to execute the query and retrieve the document.
-
-
-**Note:** We have a special field called "claiming" that is added to the document while you are editing. This prevents multiple people from working on the same document simultaneously. If the "claiming" field is set to true when you run the script for a selected document, it will skip that document and move on to the next one.
-
 
 ## Configuration for .env
 
@@ -101,44 +56,6 @@ SLACK_WEBHOOK=your-slack-webhook
 PYTZ_TIMEZONE='US/Pacific'
 ```
 
-## Project Structure
-
-```
-resume-gen-ats/
-├── .github/
-│   └── workflows/
-│       └── ci.yml              # GitHub Actions CI/CD pipeline definition
-├── scripts/
-│   ├── data_upload.py          # Uploads cleaned or processed data to MongoDB
-│   ├── data_cleanup.py         # Cleans up input data
-│   ├── data_update.py          # Adds score and truthfulness to output 
-│   ├── fine-tuning.py          # Fine-tunes the GPT model
-│   ├── data_generate_resume.py # Generates resume to job description in 1:1 relationship
-│   ├── data_statistics.py          # Generates overall score and truthfulness statistics 
-
-│   
-├── app/
-│   ├── main.py                 # Main application entry point
-│   
-├── data/
-│   ├── input/                  # Stores input files
-│   ├── processed/              # Stores processed data
-│   └── output/                 # Stores output files
-├── util/
-│   ├── reduce_csv_for_test.py  # file for testing
-├── requirements.txt            # Python dependencies
-└── README.md                   # Project overview and instructions
-└── .env                        # Project keys and secrets
-```
-
-## Thoughts Aloud
-
-Data_cleanup.py should still read from S3, but save those raw files into input. you are right though that it should save cleane data to data/processed
-then data_generate_resume.py should be ran, reading from data/procesed and outputting to data/output then data_upload.py reads from data/output to send to the Resumes collection. then data_update.py is done on the volunteer's on time, which will happen randomly throughout each week to manually update score and truthfulness. every document will be manually done, and uploaded to the Resumes_Post_Edit collection 
-
-## Other Testing Features
-
-S3_BUCKET_TEST=ci-cd-workflow-test-bucket contains `reduced_postings.csv` and `reduced_resumes.csv` which both have 10 rows. This is to test the fine-tuning functions
 
 ## Data Flow
 
@@ -276,6 +193,3 @@ S3 buckets will really only be used to store large raw datasets. Manipulated dat
   - currency
   - compensation_type
 
-## Contributing
-
-Contributions to this project are welcome. Please ensure you follow the coding standards and submit pull requests for any new features or bug fixes.

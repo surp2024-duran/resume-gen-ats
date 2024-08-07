@@ -85,9 +85,15 @@ def fine_tune_and_store():
     
     today = datetime.now(mongo_util.pst)
     prev_day = today - timedelta(days=1)
-    
-    prev_collection_name = prev_day.strftime('%B-%d-resumes').lower()
+
+    while True:
+        prev_collection_name = prev_day.strftime('%B-%d-resumes').lower()
+        if prev_collection_name in mongo_util.db.list_collection_names():
+            break
+        prev_day -= timedelta(days=1)
+
     today_collection_name = today.strftime('%B-%d-resumes').lower()
+
     
     if today_collection_name in mongo_util.db.list_collection_names():
         print(f"Collection '{today_collection_name}' already exists. Stopping script execution.")

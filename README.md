@@ -97,7 +97,7 @@ MONGO_COLLECTION_NAME=Resumes
 MONGO_COLLECTION_EDITED_NAME=Resumes_Post_Edit
 S3_BUCKET=resume-gen-ats-raw-data
 GITHUB_TOKEN=your-github-token
-SLACK_WEBHOOK=https://hooks.slack.com/services/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
+SLACK_WEBHOOK=your-slack-webhook
 PYTZ_TIMEZONE='US/Pacific'
 ```
 

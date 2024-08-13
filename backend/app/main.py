@@ -12,8 +12,7 @@ from app.routes import main_routes
 load_dotenv()
 
 app = Flask(__name__, static_folder="../../frontend/build")
-CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
-    
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 app.config["MONGO_URI"] = os.getenv("MONGO_FULL_URI")
 

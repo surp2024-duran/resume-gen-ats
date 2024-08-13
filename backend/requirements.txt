@@ -12,6 +12,7 @@ scikit-learn
 tqdm
 pytest
 certifi
+gunicorn
 colorama
 pytz # pst time zones
 tenacity

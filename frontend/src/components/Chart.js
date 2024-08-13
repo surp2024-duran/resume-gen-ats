@@ -168,24 +168,25 @@ const Chart = ({ collectionName }) => {
           </p>
         </div>
       </div>
-      <div className="uk-width-1-1">
-        <div className="uk-card uk-card-default uk-card-body">
-          <h3 className="uk-card-title">Scores and Z-Scores Over Time</h3>
-          <Line data={lineData} />
-        </div>
-      </div>
-      <div className="uk-width-1-2@m">
-        <div className="uk-card uk-card-default uk-card-body">
-          <h3 className="uk-card-title">Truthfulness Distribution</h3>
-          <Bar data={barData} />
-        </div>
-      </div>
-      <div className="uk-width-1-2@m">
-        <div className="uk-card uk-card-default uk-card-body">
-          <h3 className="uk-card-title">Truthfulness Pie Chart</h3>
-          <Pie data={pieData} />
-        </div>
-      </div>
+      <div className="uk-width-1-1 uk-margin">
+  <div className="uk-card uk-card-default uk-card-body">
+    <h3 className="uk-card-title">Scores and Z-Scores Over Time</h3>
+    <Line data={lineData} />
+  </div>
+</div>
+<div className="uk-width-1-2@m uk-margin">
+  <div className="uk-card uk-card-default uk-card-body">
+    <h3 className="uk-card-title">Truthfulness Distribution</h3>
+    <Bar data={barData} />
+  </div>
+</div>
+<div className="uk-width-1-2@m uk-margin">
+  <div className="uk-card uk-card-default uk-card-body">
+    <h3 className="uk-card-title">Truthfulness Pie Chart</h3>
+    <Pie data={pieData} />
+  </div>
+</div>
+
     </div>
   );
 };

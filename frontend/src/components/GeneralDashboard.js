@@ -8,6 +8,8 @@ import 'uikit/dist/js/uikit.min.js';
 
 ChartJS.register(...registerables);
 
+const API_URL = process.env.REACT_APP_API_URL
+
 const GeneralDashboard = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,14 +27,14 @@ const GeneralDashboard = () => {
   useEffect(() => {
     const fetchDataFromAPI = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/data`);
+        const response = await axios.get(`${API_URL}/data`);
         const collections = response.data.collections.filter((collection) => collection !== 'Resumes');
         setCollectionCount(collections.length);
 
         let totalDocs = 0;
         const allDocuments = await Promise.all(
           collections.map(async (collection, index) => {
-            const res = await axios.get(`${process.env.REACT_APP_API_URL}/data/${collection}`);
+            const res = await axios.get(`${API_URL}/data/${collection}`);
             totalDocs += res.data.length;
             setDocumentCount(totalDocs);
             setPercentage(Math.floor(((index + 1) / collections.length) * 100));
@@ -198,11 +200,7 @@ const GeneralDashboard = () => {
     <div className="uk-container uk-container-expand uk-padding">
       <div className="uk-grid uk-grid-medium uk-child-width-1-2@s uk-child-width-1-4@m uk-margin-medium-bottom" data-uk-grid>
         <div>
-          <div className="uk-card uk-card-default uk-card-body">
-            <h3 className="uk-card-title">Total Documents</h3>
-            <p className="uk-text-large">{stats.totalCount}</p>
-            <p className="uk-text-large">Document Count: {documentCount}</p> {/* Use documentCount here */}
-          </div>
+          Document Count: {documentCount} 
         </div>
         <div>
           <div className="uk-card uk-card-primary uk-card-body">

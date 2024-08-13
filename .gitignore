@@ -51,6 +51,7 @@ dmypy.json
 
 # environments
 .env
+.ebextensions
 .venv
 env/
 venv/
@@ -78,3 +79,6 @@ Desktop.ini
 # Specific to this project
 backend/data/input/
 backend/data/output/
+
+# Local Netlify folder
+.netlify

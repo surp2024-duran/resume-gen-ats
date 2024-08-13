@@ -1,1 +1,1 @@
-web: python app/main.py
+web: python backend/app/main.py

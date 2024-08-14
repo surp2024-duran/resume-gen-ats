@@ -1,7 +1,7 @@
 // frontend/src/components/GeneralDashboard.js
 import React, { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
-import { Line, Bar, Pie, Scatter } from 'react-chartjs-2';
+import { Line, Bar, Pie, Scatter, Table } from 'react-chartjs-2';
 import { Chart as ChartJS, registerables } from 'chart.js';
 import 'uikit/dist/css/uikit.min.css';
 import 'uikit/dist/js/uikit.min.js';
@@ -17,6 +17,7 @@ const GeneralDashboard = () => {
   const [documentCount, setDocumentCount] = useState(0);
   const [collectionCount, setCollectionCount] = useState(0);
   const [percentage, setPercentage] = useState(0);
+  const [collectionProgress, setCollectionProgress] = useState([]);
 
   const chartOptions = {
     responsive: true,
@@ -38,6 +39,17 @@ const GeneralDashboard = () => {
             totalDocs += res.data.length;
             setDocumentCount(totalDocs);
             setPercentage(Math.floor(((index + 1) / collections.length) * 100));
+
+            const labeledDocs = res.data.filter(doc => doc.score !== undefined).length;
+            const completionPercentage = (labeledDocs / res.data.length) * 100;
+
+            setCollectionProgress(prev => [...prev, {
+              name: collection,
+              total: res.data.length,
+              labeled: labeledDocs,
+              completionPercentage
+            }]);
+
             return res.data;
           })
         );
@@ -81,6 +93,8 @@ const GeneralDashboard = () => {
       start: new Date(Math.min(...data.filter(doc => doc.created_at).map((doc) => new Date(doc.created_at)))),
       end: new Date(Math.max(...data.filter(doc => doc.created_at).map((doc) => new Date(doc.created_at)))),
     };
+
+    
 
     return {
       avgScore,
@@ -196,6 +210,38 @@ const GeneralDashboard = () => {
     },
   };
 
+  const TopCollections = () => {
+    const sortedCollections = collectionProgress
+      .sort((a, b) => b.completionPercentage - a.completionPercentage)
+      .slice(0, 10);
+
+    return (
+      <div className="uk-card uk-card-default uk-card-body uk-margin-bottom">
+        <h3 className="uk-card-title">Top Collections Nearing Completion</h3>
+        <table className="uk-table uk-table-striped uk-table-hover">
+          <thead>
+            <tr>
+              <th>Collection</th>
+              <th>Labeled</th>
+              <th>Total</th>
+              <th>Completion %</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sortedCollections.map((collection, index) => (
+              <tr key={index}>
+                <td>{collection.name}</td>
+                <td>{collection.labeled}</td>
+                <td>{collection.total}</td>
+                <td>{collection.completionPercentage.toFixed(2)}%</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
   return (
     <div className="uk-container uk-container-expand uk-padding">
       <div className="uk-grid uk-grid-medium uk-child-width-1-2@s uk-child-width-1-4@m uk-margin-medium-bottom" data-uk-grid>
@@ -294,6 +340,9 @@ const GeneralDashboard = () => {
               </tbody>
             </table>
           </div>
+        </div>
+        <div>
+          <TopCollections />
         </div>
       </div>
     </div>

@@ -1,7 +1,7 @@
 // frontend/src/components/GeneralDashboard.js
 import React, { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
-import { Line, Bar, Pie, Scatter, Table } from 'react-chartjs-2';
+import { Line, Bar, Pie, Scatter } from 'react-chartjs-2';
 import { Chart as ChartJS, registerables } from 'chart.js';
 import 'uikit/dist/css/uikit.min.css';
 import 'uikit/dist/js/uikit.min.js';

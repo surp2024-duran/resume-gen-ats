@@ -166,3 +166,13 @@ S3 buckets are used primarily to store large raw datasets. Manipulated data, aft
 - work_type
 - currency
 - compensation_type
+
+## Considerations 
+
+We were looking into implementing AWS Sagemaker, and then AWS Ground Truth (with a private workforce) for labeling. That would make things easier and also more streamlined for the labeling process as that was the part we struggled at. 
+
+We also thought of automating the labeling process by calling OpenAI again and getting a JSON response to automatically add to documents but we wanted a human element to this project. 
+
+AWS Bedrock was also another consideration, rather than using the out-of-the-box model from OpenAI's API. 
+
+Perhaps rather than making this a project of prompt engineering, we could build a model dedicated to resume generation. But another point of struggle was also us getting a production or industry used ATS scoring system, as Workday and Greenhouse (and etc) would refuse (with good reason) to provide an API endpoint for their systems for the scale of our research project.

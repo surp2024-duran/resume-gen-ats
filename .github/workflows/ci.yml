@@ -1,68 +1,69 @@
-name: Daily Resume Fine-Tuning
+# name: Daily Resume Fine-Tuning
 
-on:
-  schedule:
-    - cron: '0 0 * * *'
-  workflow_dispatch:
+# on:
+#   schedule:
+#     - cron: '0 0 * * *'
+#   workflow_dispatch:
 
-env:
-  PYTHON_VERSION: '3.8'
-
-jobs:
-  run_fine_tuning:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-
-    - name: Change directory to backend
-      run: cd backend
-
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-
-    - name: Install dependencies
-      run: |
-        cd backend
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-
-    - name: Run fine-tuning script
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_REGION: ${{ secrets.AWS_REGION }}
-        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        OPENAI_ORG: ${{ secrets.OPENAI_ORG }}
-        MONGO_URI: ${{ secrets.MONGO_URI }}
-        MONGO_USERNAME: ${{ secrets.MONGO_USERNAME }}
-        MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
-        MONGO_DB_NAME: ${{ secrets.MONGO_DB_NAME }}
-        MONGO_COLLECTION_NAME: ${{ secrets.MONGO_COLLECTION_NAME }}
-        MONGO_COLLECTION_EDITED_NAME: ${{ secrets.MONGO_COLLECTION_EDITED_NAME }}
-        S3_BUCKET: ${{ secrets.S3_BUCKET }}
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-        PYTZ_TIMEZONE: ${{ secrets.PYTZ_TIMEZONE }}
-      run: |
-        cd backend
-        python scripts/fine_tuning.py
-
-    - name: Read fine-tuning result
-      id: result
-      run: cat /tmp/fine_tuning_result.json
-      continue-on-error: true
-
-    - name: Notify Slack on completion
-      if: always()
-      uses: 8398a7/action-slack@v3
-      with:
-        status: ${{ job.status }}
-        text: |
-          Fine-tuning process ${{ job.status == 'success' && 'completed successfully! :rocket:' || 'failed. Please check the logs. :x:' }}
-          Result: ${{ steps.result.outputs.result }}
-        fields: repo,message,commit,author,action,eventName,ref,workflow
-        author_name: GitHub Actions
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+  env:
+    PYTHON_VERSION: '3.8'
+  
+  jobs:
+    run_fine_tuning:
+      runs-on: ubuntu-latest
+      steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+  
+      - name: Change directory to backend
+        run: cd backend
+  
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+  
+      - name: Install dependencies
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+  
+      - name: Run fine-tuning script
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_ORG: ${{ secrets.OPENAI_ORG }}
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+          MONGO_USERNAME: ${{ secrets.MONGO_USERNAME }}
+          MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
+          MONGO_DB_NAME: ${{ secrets.MONGO_DB_NAME }}
+          MONGO_COLLECTION_NAME: ${{ secrets.MONGO_COLLECTION_NAME }}
+          MONGO_COLLECTION_EDITED_NAME: ${{ secrets.MONGO_COLLECTION_EDITED_NAME }}
+          S3_BUCKET: ${{ secrets.S3_BUCKET }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          PYTZ_TIMEZONE: ${{ secrets.PYTZ_TIMEZONE }}
+        run: |
+          cd backend
+          python scripts/fine_tuning.py
+  
+      - name: Read fine-tuning result
+        id: result
+        run: cat /tmp/fine_tuning_result.json
+        continue-on-error: true
+  
+      - name: Notify Slack on completion
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: |
+            Fine-tuning process ${{ job.status == 'success' && 'completed successfully! :rocket:' || 'failed. Please check the logs. :x:' }}
+            Result: ${{ steps.result.outputs.result }}
+          fields: repo,message,commit,author,action,eventName,ref,workflow
+          author_name: GitHub Actions
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+  
